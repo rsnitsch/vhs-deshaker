@@ -20,11 +20,9 @@ vhs-deshaker analyses each frame separately. It uses the black area at the left 
 
 ## Install
 
-You can download the latest binary from the releases page.
+You can download the latest binary from the releases page. The accompanying opencv DLL files must be kept in the same folder as the executable.
 
-Then, download the latest OpenCV 4.x release and copy the ``build\x64\vc15\bin\opencv_world453.dll`` and ``opencv_videoio_ffmpeg453_64.dll`` (version numbers may differ) files and place them next to the vhs-deshaker.exe file (same folder).
-
-It is recommended to also install the ffmpeg binaries and edit your PATH environment variable such that they can be executed from the commandline. (ffmpeg is needed to add back the audio stream to the output files, see below.)
+It is recommended to also install the ffmpeg binaries on your system and edit your PATH environment variable such that they can be executed from the commandline. (ffmpeg is needed to add back the audio stream to the output files, see below.)
 
 ## Usage
 
