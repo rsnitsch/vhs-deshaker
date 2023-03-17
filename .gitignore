@@ -1,0 +1,4 @@
+*.avi
+*.mp4
+_build/
+_install/
