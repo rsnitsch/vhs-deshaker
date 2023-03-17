@@ -4,11 +4,11 @@ This tool is for fixing a very specific horizontal shaking issue that affects so
 
 Input example:
 
-https://user-images.githubusercontent.com/1746428/225862292-e1ae75c9-cbd7-4089-a789-902af2b48801.mp4
+https://user-images.githubusercontent.com/1746428/225921679-25f9ba88-bee2-4557-9181-5fd0df6a07b4.mp4
 
 vhs-deshaker output:
 
-https://user-images.githubusercontent.com/1746428/225862355-eb771713-aa21-4868-802a-d0ca95a5ee85.mp4
+https://user-images.githubusercontent.com/1746428/225921734-024c3526-5193-4755-940d-00e3f5f86097.mp4
 
 I do not know what causes this type of horizontal shaking. I first encountered it when digitizing some of our old VHS cassettes with family/childhood videos. Some cassettes were more affected than others, suggesting a mechanical/physical problem.
 
