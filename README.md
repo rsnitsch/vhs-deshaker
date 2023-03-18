@@ -52,6 +52,14 @@ For details on how to use ffmpeg to mux audio/video streams you can read this St
 
 See BUILD.md.
 
+## Docker image
+
+You can also run vhs-deshaker via docker. I provide a docker image at ``rsnitsch/vhs-deshaker:latest``.
+
+Example command:
+
+    docker run -it --rm -v "$(pwd):/videos" --user $(id -u):$(id -g) rsnitsch/vhs-deshaker:latest <input-file> <output-file> [<framerate>]
+
 ## See also
 
 Online threads discussing the issue:

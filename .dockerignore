@@ -1,0 +1,6 @@
+.git/
+_build/
+_install/
+**.avi
+**.mp4
+**.png
