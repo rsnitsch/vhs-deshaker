@@ -118,6 +118,24 @@ void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv
 	}
 }
 
+/**
+ * Scans all rows in sobelX to find the positions where the black border meets the actual video content. sobelX = horizontal image gradient.
+ * 
+ * These positions are referred to as (raw) line_starts. They are used to cleanup horizontal shaking by
+ * un-shifting/re-aligning all rows of the frame such that all lines start at the same position.
+ * 
+ * In a perfect (non-shaking) VHS video the line starts would already be aligned perfectly at a fixed location,
+ * e.g. all lines would start at X = 8 and end at X = W - 8 (where 8 is the size of the black border to the left
+ * and right).
+ * 
+ * @param sobelX 	  must be a ROI that contains either the left-hand columns or right-hand columns of a video frame's horizontal
+ * 					  image gradient
+ * @param direction   indicates whether sobelX is based on the left-hand part of the video or the right-hand part of
+ *					  the video.
+ * @param line_starts the determined line starts are saved in this list, i.e. line_starts.size() == sobelX.rows. The line
+ * 					  start data may be incomplete, i.e. for some rows it may be impossible to determine the start
+ * 					  position. The respective items in line_starts get assigned the special value -1.
+*/
 void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int direction) {
 	assert(direction == 1 || direction == -1);
 	line_starts.resize(sobelX.rows, -1);
@@ -160,6 +178,9 @@ void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int di
 #endif
 }
 
+/**
+ * Fills in missing line_starts via linear interpolation.
+*/
 void interpolate_line_starts(vector<int> &line_starts) {
 	// Interpolate missing line starts.
 	int current_segment_begin = -1;
@@ -182,8 +203,8 @@ void interpolate_line_starts(vector<int> &line_starts) {
 				if (line_start_after != -1 && line_start_before != -1) {
 					// Interpolate.
 					for (int k = current_segment_begin; k < i; ++k) {
-						// von current_segment_begin bis i-1
-						// Gesamt-Gewicht: (i-1-current_segment_begin+1) = i-current_segment_begin
+						// From current_segment_begin to i-1
+						// Total weight: (i-1-current_segment_begin+1) = i-current_segment_begin
 						line_starts.at(k) = ((i-1-k) * line_start_before + (k-current_segment_begin) * line_start_after) / (i-current_segment_begin);
 					}
 				}
@@ -214,6 +235,10 @@ void interpolate_line_starts(vector<int> &line_starts) {
 	}
 }
 
+/**
+ * Cleans up / denoises the line_starts. Compact segments of subsequent (i.e. neighboring) line_starts
+ * are only kept if they are at least MIN_SEGMENT_LENGTH rows long.
+*/
 void linearize_line_starts(vector<int> &line_starts, vector<int> &segment_sizes) {
 	segment_sizes.resize(line_starts.size(), 0);
 	const int MIN_SEGMENT_LENGTH = 15;
@@ -254,6 +279,11 @@ void linearize_line_starts(vector<int> &line_starts, vector<int> &segment_sizes)
 	}
 }
 
+/**
+ * Combines line_starts derived from left-hand side of video with line_starts from
+ * right-hand side of video. If both left and right line_start is available,
+ * then the left-hand data takes precedence.
+*/
 void merge_line_starts(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &merged) {
 	assert(line_starts1.size() == line_starts2.size());
 	merged.resize(line_starts1.size(), -1);
@@ -271,6 +301,10 @@ void merge_line_starts(const vector<int> &line_starts1, const vector<int> &line_
 	}
 }
 
+/**
+ * Same task like merge_line_starts but this function takes into account the length of the segment to decide
+ * which side wins, so that the higher-quality line_starts are kept.
+*/
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1, vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count) {
 	assert(line_starts1.size() == line_starts2.size());
 	merged.resize(line_starts1.size(), -1);
