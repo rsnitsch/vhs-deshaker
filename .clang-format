@@ -1,0 +1,4 @@
+UseTab: false
+IndentWidth: 4
+AllowShortIfStatementsOnASingleLine: false
+ColumnLimit: 140
