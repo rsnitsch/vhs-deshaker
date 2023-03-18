@@ -10,6 +10,10 @@ void linearize_line_starts(vector<int> &line_starts, vector<int> &segment_sizes)
 void merge_line_starts(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &merged);
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1, vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count);
 
+const int MISSING = -1;
+const int DIRECTION_LEFT_TO_RIGHT = 1;
+const int DIRECTION_RIGHT_TO_LEFT = -1;
+
 void correct_frame(cv::Mat &input, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, cv::Mat &sobelBuffer2, vector<int> &line_starts_buffer, vector<int> &line_ends_buffer, cv::Mat &out) {
 	out.create(input.size(), input.type());
 
@@ -28,8 +32,8 @@ void correct_frame(cv::Mat &input, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, c
 
 	vector<int> &line_starts = line_starts_buffer;
 	vector<int> &line_ends = line_ends_buffer;
-	get_raw_line_starts(sobelBuffer1, line_starts, 1);
-	get_raw_line_starts(sobelBuffer2, line_ends, -1);
+	get_raw_line_starts(sobelBuffer1, line_starts, DIRECTION_LEFT_TO_RIGHT);
+	get_raw_line_starts(sobelBuffer2, line_ends, DIRECTION_RIGHT_TO_LEFT);
 
 	auto line_starts_raw = line_starts;
 	auto line_ends_raw = line_ends;
@@ -73,12 +77,17 @@ void correct_frame(cv::Mat &input, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, c
 	draw_line_starts(input, line_ends_before_interpolating, cv::Vec3b(0, 0, 255), input.cols - MAX_COL);
 #endif
 
+	// Use the line_start data obtained by the above code to shift the content of all rows of the frame
+	// such that each row begins at TARGET_LINE_START. TARGET_LINE_START is the expected (ideal) width of the
+	// left- and right-hand black borders in a decent digitized VHS video.
+	const int TARGET_LINE_START = 8;
+
 	for (int y = 0; y < input.rows; ++y) {
 		cv::Mat input_row = input.row(y);
 		cv::Mat output_row = out.row(y);
 		int line_start = line_starts.at(y);
 
-		if (line_start == -1) {
+		if (line_start == MISSING) {
 			input_row.copyTo(output_row);
 		}
 		else {
@@ -86,7 +95,7 @@ void correct_frame(cv::Mat &input, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, c
 			// If there are no white gaps at the sides of the output video, it's fine.
 			//output_row = cv::Scalar(255, 255, 255);
 
-			int shift = 8 - line_start;
+			int shift = TARGET_LINE_START - line_start;
 			if (shift > 0) {
 				// By shifting the line, we create a gap on one side of the line. This gap must be filled with zeroes.
 				memset(output_row.data, 0, shift * 3);
@@ -112,7 +121,7 @@ void correct_frame(cv::Mat &input, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, c
 void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv::Vec3b &color, int x_offset) {
 	assert(img.type() == CV_8UC3);
 	for (int y = 0; y < img.size().height; ++y) {
-		if (line_starts.at(y) != -1) {
+		if (line_starts.at(y) != MISSING) {
 			img.at<cv::Vec3b>(y, line_starts.at(y) + x_offset) = color;
 		}
 	}
@@ -130,15 +139,15 @@ void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv
  * 
  * @param sobelX 	  must be a ROI that contains either the left-hand columns or right-hand columns of a video frame's horizontal
  * 					  image gradient
- * @param direction   indicates whether sobelX is based on the left-hand part of the video or the right-hand part of
- *					  the video.
+ * @param direction   indicates whether sobelX is based on the left-hand part of the video (use the constant DIRECTION_LEFT_TO_RIGHT) or
+ * 					  the right-hand part of the video (use constant DIRECTION_RIGHT_TO_LEFT).
  * @param line_starts the determined line starts are saved in this list, i.e. line_starts.size() == sobelX.rows. The line
  * 					  start data may be incomplete, i.e. for some rows it may be impossible to determine the start
- * 					  position. The respective items in line_starts get assigned the special value -1.
+ * 					  position. The respective missing items in line_starts get assigned the special constant MISSING.
 */
 void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int direction) {
-	assert(direction == 1 || direction == -1);
-	line_starts.resize(sobelX.rows, -1);
+	assert(direction == DIRECTION_LEFT_TO_RIGHT || direction == DIRECTION_RIGHT_TO_LEFT);
+	line_starts.resize(sobelX.rows, MISSING);
 
 	int x_start, x_step, x_stop;
 	if (direction == 1) {
@@ -152,7 +161,7 @@ void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int di
 		x_stop = -1;
 	}
 	for (int y = 0; y < sobelX.rows; ++y) {
-		line_starts[y] = -1;
+		line_starts[y] = MISSING;
 		for (int x = x_start; x != x_stop; x += x_step) {
 			//double dX = cv::norm(next_pixel - pixel);
 			double dX = abs(sobelX.at<float>(y, x));
@@ -189,9 +198,9 @@ void interpolate_line_starts(vector<int> &line_starts) {
 			current_segment_begin = i;
 		}
 		else if (current_segment_begin != -1) {
-			if (line_starts.at(i) != -1 || i == line_starts.size() - 1) {
-				double line_start_after = -1;
-				double line_start_before = -1;
+			if (line_starts.at(i) != MISSING || i == line_starts.size() - 1) {
+				double line_start_after = MISSING;
+				double line_start_before = MISSING;
 				if (i != line_starts.size() - 1) {
 					line_start_after = line_starts.at(i);
 				}
@@ -200,7 +209,7 @@ void interpolate_line_starts(vector<int> &line_starts) {
 				}
 				
 				double interpolated = 0;
-				if (line_start_after != -1 && line_start_before != -1) {
+				if (line_start_after != MISSING && line_start_before != MISSING) {
 					// Interpolate.
 					for (int k = current_segment_begin; k < i; ++k) {
 						// From current_segment_begin to i-1
@@ -209,10 +218,10 @@ void interpolate_line_starts(vector<int> &line_starts) {
 					}
 				}
 				else {
-					if (line_start_after != -1) {
+					if (line_start_after != MISSING) {
 						interpolated = line_start_after;
 					}
-					else if (line_start_before != -1) {
+					else if (line_start_before != MISSING) {
 						interpolated = line_start_before;
 					}
 					else {
@@ -245,19 +254,19 @@ void linearize_line_starts(vector<int> &line_starts, vector<int> &segment_sizes)
 
 	int current_segment_begin = -1;
 	for (int i = 0; i < line_starts.size(); ++i) {
-		if (current_segment_begin == -1 && line_starts.at(i) != -1) {
+		if (current_segment_begin == -1 && line_starts.at(i) != MISSING) {
 			// Start a new segment.
 			current_segment_begin = i;
 		}
 		else if (current_segment_begin != -1) {
-			if (line_starts.at(i) == -1 || abs(line_starts.at(i) - line_starts.at(current_segment_begin)) >= 2) {
+			if (line_starts.at(i) == MISSING || abs(line_starts.at(i) - line_starts.at(current_segment_begin)) >= 2) {
 				// New segment starts here.
 				int current_segment_length = i - current_segment_begin;
 
 				if (current_segment_length < MIN_SEGMENT_LENGTH) {
 					// The previous segment was short. Discard it. It cannot be trusted.
 					for (int k = current_segment_begin; k < i; ++k) {
-						line_starts.at(k) = -1;
+						line_starts.at(k) = MISSING;
 					}
 				}
 				else {
@@ -268,7 +277,7 @@ void linearize_line_starts(vector<int> &line_starts, vector<int> &segment_sizes)
 				}
 
 				// Start new segment.
-				if (line_starts.at(i) != -1) {
+				if (line_starts.at(i) != MISSING) {
 					current_segment_begin = i;
 				}
 				else {
@@ -286,17 +295,17 @@ void linearize_line_starts(vector<int> &line_starts, vector<int> &segment_sizes)
 */
 void merge_line_starts(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &merged) {
 	assert(line_starts1.size() == line_starts2.size());
-	merged.resize(line_starts1.size(), -1);
+	merged.resize(line_starts1.size(), MISSING);
 
 	for (int i = 0; i < line_starts1.size(); ++i) {
-		if (line_starts1[i] != -1) {
+		if (line_starts1[i] != MISSING) {
 			merged[i] = line_starts1[i];
 		}
-		else if (line_starts2[i] != -1) {
+		else if (line_starts2[i] != MISSING) {
 			merged[i] = line_starts2[i];
 		}
 		else {
-			merged[i] = -1;
+			merged[i] = MISSING;
 		}
 	}
 }
@@ -307,11 +316,11 @@ void merge_line_starts(const vector<int> &line_starts1, const vector<int> &line_
 */
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1, vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count) {
 	assert(line_starts1.size() == line_starts2.size());
-	merged.resize(line_starts1.size(), -1);
+	merged.resize(line_starts1.size(), MISSING);
 
 	for (int i = 0; i < line_starts1.size(); ++i) {
-		if (line_starts1[i] != -1) {
-			if (line_starts2[i] != -1) {
+		if (line_starts1[i] != MISSING) {
+			if (line_starts2[i] != MISSING) {
 				if (segment_sizes1[i] > segment_sizes2[i]) {
 					merged_from_starts_count++;
 					merged[i] = line_starts1[i];
@@ -328,7 +337,7 @@ void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &l
 				merged[i] = line_starts1[i];
 			}
 		}
-		else if (line_starts2[i] != -1) {
+		else if (line_starts2[i] != MISSING) {
 			merged[i] = line_starts2[i];
 		}
 	}
