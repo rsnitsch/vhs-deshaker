@@ -6,7 +6,7 @@ using std::vector;
 // Internal helper methods.
 void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int direction);
 void interpolate_line_starts(vector<int> &line_starts);
-void linearize_line_starts(vector<int> &line_starts, vector<int> &segment_sizes);
+void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes);
 void merge_line_starts(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &merged);
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1,
                            vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count);
@@ -39,8 +39,8 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
     auto line_starts_raw = line_starts;
     auto line_ends_raw = line_ends;
     vector<int> segment_sizes_start, segment_sizes_end;
-    linearize_line_starts(line_starts, segment_sizes_start);
-    linearize_line_starts(line_ends, segment_sizes_end);
+    denoise_line_starts(line_starts, segment_sizes_start);
+    denoise_line_starts(line_ends, segment_sizes_end);
 
     auto line_starts_before_interpolating = line_starts;
     auto line_ends_before_interpolating = line_ends;
@@ -243,7 +243,7 @@ void interpolate_line_starts(vector<int> &line_starts) {
  * Cleans up / denoises the line_starts. Compact segments of subsequent (i.e. neighboring) line_starts
  * are only kept if they are at least MIN_SEGMENT_LENGTH rows long.
  */
-void linearize_line_starts(vector<int> &line_starts, vector<int> &segment_sizes) {
+void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes) {
     segment_sizes.resize(line_starts.size(), 0);
     const int MIN_SEGMENT_LENGTH = 15;
 
