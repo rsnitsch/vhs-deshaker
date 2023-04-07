@@ -11,9 +11,9 @@ using std::vector;
 // Internal helper methods.
 void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int direction);
 void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes);
-void interpolate_line_starts(vector<int> &line_starts);
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1,
                            vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count);
+void interpolate_line_starts(vector<int> &line_starts);
 
 const int MISSING = -1;
 const int DIRECTION_LEFT_TO_RIGHT = 1;
@@ -272,6 +272,38 @@ void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes) {
 }
 
 /**
+ * Combines line_starts derived from analysis of left-hand side of video with line_starts (line_ends) from
+ * right-hand side of video. When both left-hand and right-hand line_start data is available for a certain row,
+ * then this function takes into account the length of the segments to decide which side wins. line_starts from
+ * longer compact segments of line_starts are considered more reliable and therefore take precedence.
+ */
+void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1,
+                           vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count) {
+    assert(line_starts1.size() == line_starts2.size());
+    merged.resize(line_starts1.size(), MISSING);
+
+    for (int i = 0; i < line_starts1.size(); ++i) {
+        if (line_starts1[i] != MISSING) {
+            if (line_starts2[i] != MISSING) {
+                if (segment_sizes1[i] > segment_sizes2[i]) {
+                    merged_from_starts_count++;
+                    merged[i] = line_starts1[i];
+                } else if (segment_sizes1[i] < segment_sizes2[i]) {
+                    merged_from_ends_count++;
+                    merged[i] = line_starts2[i];
+                } else {
+                    merged[i] = (line_starts1[i] + line_starts2[i]) / 2;
+                }
+            } else {
+                merged[i] = line_starts1[i];
+            }
+        } else if (line_starts2[i] != MISSING) {
+            merged[i] = line_starts2[i];
+        }
+    }
+}
+
+/**
  * Fills in missing line_starts via linear interpolation.
  */
 void interpolate_line_starts(vector<int> &line_starts) {
@@ -322,38 +354,6 @@ void interpolate_line_starts(vector<int> &line_starts) {
                 // Search for new segment.
                 current_segment_begin = -1;
             }
-        }
-    }
-}
-
-/**
- * Combines line_starts derived from analysis of left-hand side of video with line_starts (line_ends) from
- * right-hand side of video. When both left-hand and right-hand line_start data is available for a certain row,
- * then this function takes into account the length of the segments to decide which side wins. line_starts from
- * longer compact segments of line_starts are considered more reliable and therefore take precedence.
- */
-void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1,
-                           vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count) {
-    assert(line_starts1.size() == line_starts2.size());
-    merged.resize(line_starts1.size(), MISSING);
-
-    for (int i = 0; i < line_starts1.size(); ++i) {
-        if (line_starts1[i] != MISSING) {
-            if (line_starts2[i] != MISSING) {
-                if (segment_sizes1[i] > segment_sizes2[i]) {
-                    merged_from_starts_count++;
-                    merged[i] = line_starts1[i];
-                } else if (segment_sizes1[i] < segment_sizes2[i]) {
-                    merged_from_ends_count++;
-                    merged[i] = line_starts2[i];
-                } else {
-                    merged[i] = (line_starts1[i] + line_starts2[i]) / 2;
-                }
-            } else {
-                merged[i] = line_starts1[i];
-            }
-        } else if (line_starts2[i] != MISSING) {
-            merged[i] = line_starts2[i];
         }
     }
 }
