@@ -16,7 +16,33 @@ I do not know what causes this type of horizontal shaking. I first encountered i
 
 Unfortunately I was unable to fix our videos with traditional video deshaking software. So I decided to try and create my own algorithm for fixing this nasty issue.
 
-vhs-deshaker analyses each frame separately. It uses the black area at the left and right borders to determine the horizontal shift for each line. These shifts are then cleaned up, interpolated and smoothed. The interpolation is to fill in gaps because in dark scenes it will be impossible to find the black border for many lines. Finally the lines in the frame can be deshifted, which should remove most of the horizontal shaking.
+My algorithm analyzes the pure black at the left and right borders of VHS video frames. Ideally the pure black area should always have the same width. In my VHS videos,
+it should have been 8px on both left and right side of the frames. But due to horizontal shaking and distortions the actual width differed greatly between and within
+frames. vhs-deshaker attempts to reverse these deviations by realigning the rows of the video frames such that all frames start at the same column.
+
+To achieve that, vhs-deshaker first applies edge detection to the pure black areas at the left and right borders of VHS videos to determine the horizontal shift for each line:
+
+![alt text](docs/hiw_1_line_starts_raw.jpg)
+
+These shifts, actually described as line_starts (from left side of image) and line_ends (from right side of image), are then denoised. Denoising means that very small consecutive segments of line_starts are removed:
+
+![alt text](docs/hiw_2_line_starts_after_denoising.jpg)
+
+The next step is to merge the information from the line_starts and the line_ends. For rows with both line_start and line_end information, the larger consecutive segment
+wins because it is considered more reliable:
+
+![alt text](docs/hiw_3_line_starts_merged.jpg)
+
+There are still many rows for which no line_start data is available. These gaps are filled by linear interpolation:
+
+![alt text](docs/hiw_4_line_starts_interpolated.jpg)
+
+Finally, the line_starts are smoothed. This smoothes any remaining discontinuities in the line_starts and thus ensures that neighboring lines are always shifted
+by a very similar amount:
+
+![alt text](docs/hiw_5_line_starts_smoothed_final.jpg)
+
+This data is then used to shift/realign all rows of the frame.
 
 ## Install
 
