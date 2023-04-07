@@ -1,8 +1,6 @@
 add_executable(vhs-deshaker
                main.cpp
-               correct_frame.h
                correct_frame.cpp
-               process_single_threaded.h
                process_single_threaded.cpp)
 
 target_link_libraries(vhs-deshaker ${OpenCV_LIBS})
