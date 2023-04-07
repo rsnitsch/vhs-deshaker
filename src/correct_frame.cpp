@@ -305,6 +305,11 @@ void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &l
 
 /**
  * Fills in missing line_starts via linear interpolation.
+ *
+ * @todo Debug this function. It seems to be buggy. Interpolated segments seem to
+ *       start too far (most of the times only 1px) on the left-hand side. The subsequent smoothing fixes
+ *       this in most cases, but it should be investigated anyway. Also, the code could be refactored,
+ *       it is a bit messy.
  */
 void interpolate_line_starts(vector<int> &line_starts) {
     // Interpolate missing line starts.

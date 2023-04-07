@@ -9,6 +9,8 @@
 using namespace cv;
 using namespace std;
 
+// TODO: Add --col-range commandline parameter
+// TODO: Replace the positional framerate parameter with --framerate option
 int main(int argc, char *argv[]) {
     cout << "vhs-deshaker 1.0.0" << endl << endl;
     if (argc != 3 && argc != 4) {
