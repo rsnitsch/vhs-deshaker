@@ -251,8 +251,9 @@ void interpolate_line_starts(vector<int> &line_starts) {
                     for (int k = current_segment_begin; k < i; ++k) {
                         // From current_segment_begin to i-1
                         // Total weight: (i-1-current_segment_begin+1) = i-current_segment_begin
-                        line_starts.at(k) = ((i - 1 - k) * line_start_before + (k - current_segment_begin) * line_start_after) /
-                                            (i - current_segment_begin);
+                        line_starts.at(k) =
+                            static_cast<int>(((i - 1 - k) * line_start_before + (k - current_segment_begin) * line_start_after) /
+                                             (i - current_segment_begin));
                     }
                 } else {
                     if (line_start_after != MISSING) {
@@ -264,7 +265,7 @@ void interpolate_line_starts(vector<int> &line_starts) {
                         return;
                     }
                     interpolated = round(interpolated);
-                    int interpolated_int = interpolated;
+                    int interpolated_int = static_cast<int>(interpolated);
 
                     // Interpolate.
                     for (int k = current_segment_begin; k < i; ++k) {
