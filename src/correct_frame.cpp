@@ -5,8 +5,8 @@ using std::vector;
 
 // Internal helper methods.
 void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int direction);
-void interpolate_line_starts(vector<int> &line_starts);
 void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes);
+void interpolate_line_starts(vector<int> &line_starts);
 void merge_line_starts(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &merged);
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1,
                            vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count);
@@ -186,6 +186,47 @@ void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int di
 }
 
 /**
+ * Cleans up / denoises the line_starts. Compact segments of subsequent (i.e. neighboring) line_starts
+ * are only kept if they are at least MIN_SEGMENT_LENGTH rows long.
+ */
+void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes) {
+    segment_sizes.resize(line_starts.size(), 0);
+    const int MIN_SEGMENT_LENGTH = 15;
+
+    int current_segment_begin = -1;
+    for (int i = 0; i < line_starts.size(); ++i) {
+        if (current_segment_begin == -1 && line_starts.at(i) != MISSING) {
+            // Start a new segment.
+            current_segment_begin = i;
+        } else if (current_segment_begin != -1) {
+            if (line_starts.at(i) == MISSING || abs(line_starts.at(i) - line_starts.at(current_segment_begin)) >= 2) {
+                // New segment starts here.
+                int current_segment_length = i - current_segment_begin;
+
+                if (current_segment_length < MIN_SEGMENT_LENGTH) {
+                    // The previous segment was short. Discard it. It cannot be trusted.
+                    for (int k = current_segment_begin; k < i; ++k) {
+                        line_starts.at(k) = MISSING;
+                    }
+                } else {
+                    // Save segment length.
+                    for (int k = current_segment_begin; k < i; ++k) {
+                        segment_sizes.at(k) = current_segment_length;
+                    }
+                }
+
+                // Start new segment.
+                if (line_starts.at(i) != MISSING) {
+                    current_segment_begin = i;
+                } else {
+                    current_segment_begin = -1;
+                }
+            }
+        }
+    }
+}
+
+/**
  * Fills in missing line_starts via linear interpolation.
  */
 void interpolate_line_starts(vector<int> &line_starts) {
@@ -234,47 +275,6 @@ void interpolate_line_starts(vector<int> &line_starts) {
 
                 // Search for new segment.
                 current_segment_begin = -1;
-            }
-        }
-    }
-}
-
-/**
- * Cleans up / denoises the line_starts. Compact segments of subsequent (i.e. neighboring) line_starts
- * are only kept if they are at least MIN_SEGMENT_LENGTH rows long.
- */
-void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes) {
-    segment_sizes.resize(line_starts.size(), 0);
-    const int MIN_SEGMENT_LENGTH = 15;
-
-    int current_segment_begin = -1;
-    for (int i = 0; i < line_starts.size(); ++i) {
-        if (current_segment_begin == -1 && line_starts.at(i) != MISSING) {
-            // Start a new segment.
-            current_segment_begin = i;
-        } else if (current_segment_begin != -1) {
-            if (line_starts.at(i) == MISSING || abs(line_starts.at(i) - line_starts.at(current_segment_begin)) >= 2) {
-                // New segment starts here.
-                int current_segment_length = i - current_segment_begin;
-
-                if (current_segment_length < MIN_SEGMENT_LENGTH) {
-                    // The previous segment was short. Discard it. It cannot be trusted.
-                    for (int k = current_segment_begin; k < i; ++k) {
-                        line_starts.at(k) = MISSING;
-                    }
-                } else {
-                    // Save segment length.
-                    for (int k = current_segment_begin; k < i; ++k) {
-                        segment_sizes.at(k) = current_segment_length;
-                    }
-                }
-
-                // Start new segment.
-                if (line_starts.at(i) != MISSING) {
-                    current_segment_begin = i;
-                } else {
-                    current_segment_begin = -1;
-                }
             }
         }
     }
