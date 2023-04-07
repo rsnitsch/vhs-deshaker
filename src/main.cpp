@@ -51,7 +51,8 @@ int main(int argc, char *argv[]) {
     chrono::time_point<chrono::system_clock> start, end;
     start = chrono::system_clock::now();
 
-    process_single_threaded(videoCapture, videoWriter);
+    int colRange = 15;
+    process_single_threaded(videoCapture, videoWriter, colRange);
 
     end = chrono::system_clock::now();
     long elapsed_milliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();

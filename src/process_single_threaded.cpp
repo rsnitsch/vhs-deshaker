@@ -7,7 +7,7 @@
 
 // #define ENABLE_DEBUGGING
 
-void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &videoWriter) {
+void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &videoWriter, const int colRange) {
     int i = 0;
     int frame_count = videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
     cv::Mat img, corrected, grayBuffer, sobelBuffer1, sobelBuffer2;
@@ -15,11 +15,10 @@ void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &vi
     while (videoCapture.grab()) {
         videoCapture.retrieve(img);
 
-        // #define ENABLE_DEBUGGING
 #ifdef ENABLE_DEBUGGING
         if (i > 10) {
 #endif
-            correct_frame(img, grayBuffer, sobelBuffer1, sobelBuffer2, line_starts, line_ends, corrected);
+            correct_frame(img, colRange, grayBuffer, sobelBuffer1, sobelBuffer2, line_starts, line_ends, corrected);
 
 #ifdef ENABLE_DEBUGGING
             cv::namedWindow("Input");

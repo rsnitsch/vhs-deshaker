@@ -15,16 +15,15 @@ const int MISSING = -1;
 const int DIRECTION_LEFT_TO_RIGHT = 1;
 const int DIRECTION_RIGHT_TO_LEFT = -1;
 
-void correct_frame(cv::Mat &input, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, cv::Mat &sobelBuffer2, vector<int> &line_starts_buffer,
-                   vector<int> &line_ends_buffer, cv::Mat &out) {
+void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, cv::Mat &sobelBuffer2,
+                   vector<int> &line_starts_buffer, vector<int> &line_ends_buffer, cv::Mat &out) {
     out.create(input.size(), input.type());
 
-    const int MAX_COL = 15;
     cv::Mat &gray = grayBuffer;
-    cv::cvtColor(input.colRange(0, MAX_COL), gray, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(input.colRange(0, colRange), gray, cv::COLOR_BGR2GRAY);
     cv::Sobel(gray, sobelBuffer1, CV_32F, 1, 0);
 
-    cv::cvtColor(input.colRange(input.cols - MAX_COL, input.cols), gray, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(input.colRange(input.cols - colRange, input.cols), gray, cv::COLOR_BGR2GRAY);
     cv::Sobel(gray, sobelBuffer2, CV_32F, 1, 0);
 
 #if 0
@@ -71,13 +70,13 @@ void correct_frame(cv::Mat &input, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, c
 #if 0
 	// Raw: green.
 	draw_line_starts(input, line_starts_raw, cv::Vec3b(0, 255, 0), 0);
-	draw_line_starts(input, line_ends_raw, cv::Vec3b(0, 255, 0), input.cols - MAX_COL);
+	draw_line_starts(input, line_ends_raw, cv::Vec3b(0, 255, 0), input.cols - colRange);
 #endif
 
 #if 0
 	// Before interpolating: red.
 	draw_line_starts(input, line_starts_before_interpolating, cv::Vec3b(0, 0, 255), 0);
-	draw_line_starts(input, line_ends_before_interpolating, cv::Vec3b(0, 0, 255), input.cols - MAX_COL);
+	draw_line_starts(input, line_ends_before_interpolating, cv::Vec3b(0, 0, 255), input.cols - colRange);
 #endif
 
     // Use the line_start data obtained by the above code to shift the content of all rows of the frame
