@@ -1,6 +1,11 @@
 #include "correct_frame.h"
 #include <opencv2/imgproc.hpp>
 
+// #define ENABLE_VISUALIZATIONS
+#ifdef ENABLE_VISUALIZATIONS
+#include <opencv2/highgui.hpp>
+#endif
+
 using std::vector;
 
 // Internal helper methods.
@@ -25,11 +30,6 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
     cv::cvtColor(input.colRange(input.cols - colRange, input.cols), gray, cv::COLOR_BGR2GRAY);
     cv::Sobel(gray, sobelBuffer2, CV_32F, 1, 0);
 
-#if 0
-	namedWindow("Sobel");
-	imshow("Sobel", sobelX / 255.0);
-#endif
-
     vector<int> &line_starts = line_starts_buffer;
     vector<int> &line_ends = line_ends_buffer;
     get_raw_line_starts(sobelBuffer1, line_starts, DIRECTION_LEFT_TO_RIGHT);
@@ -41,8 +41,8 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
     denoise_line_starts(line_starts, segment_sizes_start);
     denoise_line_starts(line_ends, segment_sizes_end);
 
-    auto line_starts_before_interpolating = line_starts;
-    auto line_ends_before_interpolating = line_ends;
+    auto line_starts_after_denoising = line_starts;
+    auto line_ends_after_denoising = line_ends;
 
     // merge_line_starts(line_starts, line_ends, line_starts);
     int merged_from_starts_count = 0;
@@ -52,30 +52,76 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
     auto line_starts_merged = line_starts;
 
     interpolate_line_starts(line_starts);
+    auto line_starts_interpolated = line_starts;
 
     cv::Mat line_starts_mat(line_starts);
     cv::blur(line_starts_mat, line_starts_mat, cv::Size(1, 51));
 
-#if 0
-	// After merging: yellow.
-	draw_line_starts(input, line_starts_merged, cv::Vec3b(0, 255, 255), 0);
+#ifdef ENABLE_VISUALIZATIONS
+    bool waitKey = false;
+    cv::Vec3b color_for_line_starts(255, 255, 0);
 #endif
 
 #if 0
-	// After interpolating + blurring: yellow.
-	draw_line_starts(input, line_starts, cv::Vec3b(0, 255, 255), 0);
+    cv::namedWindow("0 - sobelBuffer1 (from left side)");
+    cv::imshow("0 - sobelBuffer1 (from left side)", sobelBuffer1 / 255.0);
+    cv::namedWindow("0 - sobelBuffer2 (from right side)");
+    cv::imshow("0 - sobelBuffer2 (from right side)", sobelBuffer2 / 255.0);
+    waitKey = true;
 #endif
 
-#if 0
-	// Raw: green.
-	draw_line_starts(input, line_starts_raw, cv::Vec3b(0, 255, 0), 0);
-	draw_line_starts(input, line_ends_raw, cv::Vec3b(0, 255, 0), input.cols - colRange);
+#ifdef ENABLE_VISUALIZATIONS
+    // Raw line starts: green.
+    cv::Mat debug_image_line_starts_raw = input.clone();
+    draw_line_starts(debug_image_line_starts_raw, line_starts_raw, color_for_line_starts, 0);
+    draw_line_starts(debug_image_line_starts_raw, line_ends_raw, color_for_line_starts, input.cols - colRange);
+    cv::namedWindow("1 - line_starts_raw");
+    cv::imshow("1 - line_starts_raw", debug_image_line_starts_raw);
+    waitKey = true;
 #endif
 
-#if 0
-	// Before interpolating: red.
-	draw_line_starts(input, line_starts_before_interpolating, cv::Vec3b(0, 0, 255), 0);
-	draw_line_starts(input, line_ends_before_interpolating, cv::Vec3b(0, 0, 255), input.cols - colRange);
+#ifdef ENABLE_VISUALIZATIONS
+    // After denoising: red.
+    cv::Mat debug_image_line_starts_after_denoising = input.clone();
+    draw_line_starts(debug_image_line_starts_after_denoising, line_starts_after_denoising, color_for_line_starts, 0);
+    draw_line_starts(debug_image_line_starts_after_denoising, line_ends_after_denoising, color_for_line_starts, input.cols - colRange);
+    cv::namedWindow("2 - line_starts_after_denoising");
+    cv::imshow("2 - line_starts_after_denoising", debug_image_line_starts_after_denoising);
+    waitKey = true;
+#endif
+
+#ifdef ENABLE_VISUALIZATIONS
+    // After merging: yellow.
+    cv::Mat debug_image_line_starts_merged = input.clone();
+    draw_line_starts(debug_image_line_starts_merged, line_starts_merged, color_for_line_starts, 0);
+    cv::namedWindow("3 - line_starts_merged");
+    cv::imshow("3 - line_starts_merged", debug_image_line_starts_merged);
+    waitKey = true;
+#endif
+
+#ifdef ENABLE_VISUALIZATIONS
+    // After interpolating: cyan.
+    cv::Mat debug_image_line_starts_interpolated = input.clone();
+    draw_line_starts(debug_image_line_starts_interpolated, line_starts_interpolated, cv::Vec3b(255, 0, 255), 0);
+    draw_line_starts(debug_image_line_starts_interpolated, line_starts_merged, color_for_line_starts, 0);
+    cv::namedWindow("4 - line_starts_interpolated");
+    cv::imshow("4 - line_starts_interpolated", debug_image_line_starts_interpolated);
+    waitKey = true;
+#endif
+
+#ifdef ENABLE_VISUALIZATIONS
+    // FINAL (after smoothing): blue.
+    cv::Mat debug_image_line_starts_smoothed = input.clone();
+    draw_line_starts(debug_image_line_starts_smoothed, line_starts, cv::Vec3b(255, 0, 255), 0);
+    cv::namedWindow("5 - line_starts_final (smoothed)");
+    cv::imshow("5 - line_starts_final (smoothed)", debug_image_line_starts_smoothed);
+    waitKey = true;
+#endif
+
+#ifdef ENABLE_VISUALIZATIONS
+    if (waitKey) {
+        cv::waitKey();
+    }
 #endif
 
     // Use the line_start data obtained by the above code to shift the content of all rows of the frame
