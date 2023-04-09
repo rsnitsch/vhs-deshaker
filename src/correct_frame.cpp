@@ -181,13 +181,13 @@ void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv
  * e.g. all lines would start at X = 8 and end at X = W - 8 (where 8 is the size of the black border to the left
  * and right).
  *
- * @param sobelX 	  must be a ROI that contains either the left-hand columns or right-hand columns of a video frame's horizontal
- * 					  image gradient
- * @param direction   indicates whether sobelX is based on the left-hand part of the video (use the constant DIRECTION_LEFT_TO_RIGHT) or
- * 					  the right-hand part of the video (use constant DIRECTION_RIGHT_TO_LEFT).
- * @param line_starts the determined line starts are saved in this list, i.e. line_starts.size() == sobelX.rows. The line
- * 					  start data may be incomplete, i.e. for some rows it may be impossible to determine the start
- * 					  position. The respective missing items in line_starts get assigned the special constant MISSING.
+ * @param sobelX 	    must be a ROI that contains either the left-hand columns or right-hand columns of a video frame's horizontal
+ *                      image gradient
+ * @param direction     indicates whether sobelX is based on the left-hand part of the video (use the constant DIRECTION_LEFT_TO_RIGHT) or
+ * 	                    the right-hand part of the video (use constant DIRECTION_RIGHT_TO_LEFT).
+ * @param line_starts   the determined line starts are saved in this list, i.e. line_starts.size() == sobelX.rows. The line
+ * 	                    start data may be incomplete, i.e. for some rows it may be impossible to determine the start
+ *                      position. The respective missing items in line_starts get assigned the special constant MISSING.
  */
 void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int direction) {
     assert(direction == DIRECTION_LEFT_TO_RIGHT || direction == DIRECTION_RIGHT_TO_LEFT);
