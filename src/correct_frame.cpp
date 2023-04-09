@@ -304,7 +304,8 @@ void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &l
 }
 
 /**
- * Fills in missing line_starts via linear interpolation.
+ * Fills in gaps in the line_start data via linear interpolation (for inner gaps) and by extrapolating
+ * via nearest-known-value replication (for outer gaps at the top/bottom of a frame).
  *
  * @todo Debug this function. It seems to be buggy. Interpolated segments seem to
  *       start too far (most of the times only 1px) on the left-hand side. The subsequent smoothing fixes
@@ -317,9 +318,15 @@ void interpolate_line_starts(vector<int> &line_starts) {
     int current_gap_begin = SEARCHING_GAP;
     for (int i = 0; i < line_starts.size(); ++i) {
         if (current_gap_begin == SEARCHING_GAP && line_starts.at(i) == MISSING) {
+            // The beginning of a gap has been found.
             current_gap_begin = i;
         } else if (current_gap_begin != SEARCHING_GAP) {
             if (line_starts.at(i) != MISSING || i == line_starts.size() - 1) {
+                // The current gap ends here, either because we found a line_start or because we reached the end of the
+                // line_starts vector (i.e. the bottom row of the frame).
+
+                // For interpolation, we need to determine the last known line_start values from before the gap
+                // and from after the gap.
                 double line_start_after = MISSING;
                 double line_start_before = MISSING;
                 if (i != line_starts.size() - 1) {
@@ -331,7 +338,8 @@ void interpolate_line_starts(vector<int> &line_starts) {
 
                 double interpolated = 0;
                 if (line_start_after != MISSING && line_start_before != MISSING) {
-                    // Interpolate.
+                    // Line_start values from before *and* after the current gap are known.
+                    // This means it is an inner gap and we can interpolate the missing values.
                     for (int k = current_gap_begin; k < i; ++k) {
                         // From current_segment_begin to i-1
                         // Total weight: (i-1-current_segment_begin+1) = i-current_segment_begin
@@ -339,18 +347,25 @@ void interpolate_line_starts(vector<int> &line_starts) {
                             ((i - 1 - k) * line_start_before + (k - current_gap_begin) * line_start_after) / (i - current_gap_begin));
                     }
                 } else {
+                    // This is an outer gap. We can only extrapolate.
                     if (line_start_after != MISSING) {
+                        // The outer gap is towards the top of the frame.
                         interpolated = line_start_after;
                     } else if (line_start_before != MISSING) {
+                        // The outer gap is towards the bottom of the frame.
                         interpolated = line_start_before;
                     } else {
+                        // Neither a line_start value from before the gap is known nor a line_start value from after the gap.
+                        // This means that no line_start data is available for this frame at all. Neither interpolation nor
+                        // extrapolation is possible.
                         assert(i == line_starts.size() - 1);
                         return;
                     }
+
+                    // Extrapolate by simply replicating the closest known line_start value.
+                    // Like BORDER_REPLICATE in OpenCV.
                     interpolated = round(interpolated);
                     int interpolated_int = static_cast<int>(interpolated);
-
-                    // Interpolate.
                     for (int k = current_gap_begin; k < i; ++k) {
                         line_starts.at(k) = interpolated_int;
                     }
