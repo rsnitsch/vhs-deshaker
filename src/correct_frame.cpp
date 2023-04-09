@@ -312,12 +312,13 @@ void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &l
  *       it is a bit messy.
  */
 void interpolate_line_starts(vector<int> &line_starts) {
-    // Interpolate missing line starts.
-    int current_segment_begin = -1;
+    // Constant used to indicate that we are currently searching for the beginning of a gap segment.
+    const int SEARCHING_SEGMENT = -2;
+    int current_segment_begin = SEARCHING_SEGMENT;
     for (int i = 0; i < line_starts.size(); ++i) {
-        if (current_segment_begin == -1 && line_starts.at(i) == MISSING) {
+        if (current_segment_begin == SEARCHING_SEGMENT && line_starts.at(i) == MISSING) {
             current_segment_begin = i;
-        } else if (current_segment_begin != -1) {
+        } else if (current_segment_begin != SEARCHING_SEGMENT) {
             if (line_starts.at(i) != MISSING || i == line_starts.size() - 1) {
                 double line_start_after = MISSING;
                 double line_start_before = MISSING;
@@ -357,7 +358,7 @@ void interpolate_line_starts(vector<int> &line_starts) {
                 }
 
                 // Search for new segment.
-                current_segment_begin = -1;
+                current_segment_begin = SEARCHING_SEGMENT;
             }
         }
     }
