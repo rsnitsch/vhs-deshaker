@@ -307,10 +307,8 @@ void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &l
  * Fills in gaps in the line_start data via linear interpolation (for inner gaps) and by extrapolating
  * via nearest-known-value replication (for outer gaps at the top/bottom of a frame).
  *
- * @todo Debug this function. It seems to be buggy. Interpolated segments seem to
- *       start too far (most of the times only 1px) on the left-hand side. The subsequent smoothing fixes
- *       this in most cases, but it should be investigated anyway. Also, the code could be refactored,
- *       it is a bit messy.
+ * @todo    This function could be split into a separate extrapolation (for outer gaps) and interpolation
+ *          function (for inner gaps). By splitting these tasks the code would be easier to understand.
  */
 void interpolate_line_starts(vector<int> &line_starts) {
     // Constant used to indicate that we are currently searching for the beginning of a gap segment.
