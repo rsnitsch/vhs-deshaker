@@ -1,6 +1,6 @@
 FROM debian:stable AS builder
 LABEL org.opencontainers.image.authors="mail@robertnitsch.de"
-LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.version="1.0.1"
 LABEL org.opencontainers.image.title="Fix horizontal shaking in digitized VHS videos"
 LABEL org.opencontainers.image.url="https://github.com/rsnitsch/vhs-deshaker"
 
@@ -12,6 +12,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 COPY CMakeLists.txt ./
+COPY include ./include
 COPY src ./src
 
 RUN cmake -H. -B_build -DCMAKE_INSTALL_PREFIX=_install -DCMAKE_BUILD_TYPE=Release
