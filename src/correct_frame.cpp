@@ -313,31 +313,30 @@ void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &l
  */
 void interpolate_line_starts(vector<int> &line_starts) {
     // Constant used to indicate that we are currently searching for the beginning of a gap segment.
-    const int SEARCHING_SEGMENT = -2;
-    int current_segment_begin = SEARCHING_SEGMENT;
+    const int SEARCHING_GAP = -2;
+    int current_gap_begin = SEARCHING_GAP;
     for (int i = 0; i < line_starts.size(); ++i) {
-        if (current_segment_begin == SEARCHING_SEGMENT && line_starts.at(i) == MISSING) {
-            current_segment_begin = i;
-        } else if (current_segment_begin != SEARCHING_SEGMENT) {
+        if (current_gap_begin == SEARCHING_GAP && line_starts.at(i) == MISSING) {
+            current_gap_begin = i;
+        } else if (current_gap_begin != SEARCHING_GAP) {
             if (line_starts.at(i) != MISSING || i == line_starts.size() - 1) {
                 double line_start_after = MISSING;
                 double line_start_before = MISSING;
                 if (i != line_starts.size() - 1) {
                     line_start_after = line_starts.at(i);
                 }
-                if (current_segment_begin != 0) {
-                    line_start_before = line_starts.at(current_segment_begin - 1);
+                if (current_gap_begin != 0) {
+                    line_start_before = line_starts.at(current_gap_begin - 1);
                 }
 
                 double interpolated = 0;
                 if (line_start_after != MISSING && line_start_before != MISSING) {
                     // Interpolate.
-                    for (int k = current_segment_begin; k < i; ++k) {
+                    for (int k = current_gap_begin; k < i; ++k) {
                         // From current_segment_begin to i-1
                         // Total weight: (i-1-current_segment_begin+1) = i-current_segment_begin
-                        line_starts.at(k) =
-                            static_cast<int>(((i - 1 - k) * line_start_before + (k - current_segment_begin) * line_start_after) /
-                                             (i - current_segment_begin));
+                        line_starts.at(k) = static_cast<int>(
+                            ((i - 1 - k) * line_start_before + (k - current_gap_begin) * line_start_after) / (i - current_gap_begin));
                     }
                 } else {
                     if (line_start_after != MISSING) {
@@ -352,13 +351,13 @@ void interpolate_line_starts(vector<int> &line_starts) {
                     int interpolated_int = static_cast<int>(interpolated);
 
                     // Interpolate.
-                    for (int k = current_segment_begin; k < i; ++k) {
+                    for (int k = current_gap_begin; k < i; ++k) {
                         line_starts.at(k) = interpolated_int;
                     }
                 }
 
                 // Search for new segment.
-                current_segment_begin = SEARCHING_SEGMENT;
+                current_gap_begin = SEARCHING_GAP;
             }
         }
     }
