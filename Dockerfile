@@ -12,6 +12,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 COPY CMakeLists.txt ./
+COPY include ./include
 COPY src ./src
 
 RUN cmake -H. -B_build -DCMAKE_INSTALL_PREFIX=_install -DCMAKE_BUILD_TYPE=Release
