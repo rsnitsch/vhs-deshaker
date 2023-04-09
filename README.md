@@ -81,7 +81,7 @@ See BUILD.md.
 
 ## Docker image
 
-You can also run vhs-deshaker via docker. I provide a docker image at ``rsnitsch/vhs-deshaker:latest``.
+You can also run vhs-deshaker via docker. I provide a docker image at [`rsnitsch/vhs-deshaker`](https://hub.docker.com/r/rsnitsch/vhs-deshaker).
 
 Example command:
 
