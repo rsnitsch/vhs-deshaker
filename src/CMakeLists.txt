@@ -7,7 +7,7 @@ target_link_libraries(vhs-deshaker ${OpenCV_LIBS})
 
 install(TARGETS vhs-deshaker)
 
-if(win32)
+if(WIN32)
     get_target_property(opencv_world_dll_source_filepath opencv_world IMPORTED_LOCATION_RELEASE)
     install(FILES ${opencv_world_dll_source_filepath} DESTINATION bin)
 
