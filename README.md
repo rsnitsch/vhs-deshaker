@@ -33,7 +33,8 @@ wins because it is considered more reliable:
 
 ![alt text](docs/hiw_3_line_starts_merged.jpg)
 
-There are still many rows for which no line_start data is available. These gaps are filled by linear interpolation:
+There are still many rows for which no line_start data is available. These gaps are filled by linear interpolation (for inner gaps) and extrapolated via nearest-known-value
+replication (for outer gaps):
 
 ![alt text](docs/hiw_4_line_starts_interpolated.jpg)
 
