@@ -315,7 +315,7 @@ void interpolate_line_starts(vector<int> &line_starts) {
     // Interpolate missing line starts.
     int current_segment_begin = -1;
     for (int i = 0; i < line_starts.size(); ++i) {
-        if (current_segment_begin == -1 && line_starts.at(i) == -1) {
+        if (current_segment_begin == -1 && line_starts.at(i) == MISSING) {
             current_segment_begin = i;
         } else if (current_segment_begin != -1) {
             if (line_starts.at(i) != MISSING || i == line_starts.size() - 1) {
