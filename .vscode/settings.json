@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "iostream": "cpp",
+        "vector": "cpp",
+        "xstring": "cpp"
+    },
+    "editor.formatOnSave": true
+}
