@@ -6,6 +6,11 @@
 #include <vector>
 
 // #define ENABLE_DEBUGGING
+// #define ENABLE_DRAW_FRAME_NUMBER
+
+#ifdef ENABLE_DRAW_FRAME_NUMBER
+#include <opencv2/imgproc.hpp>
+#endif
 
 void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &videoWriter, const int colRange) {
     int i = 0;
@@ -17,6 +22,11 @@ void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &vi
 
 #ifdef ENABLE_DEBUGGING
         if (i > 10) {
+#endif
+
+#ifdef ENABLE_DRAW_FRAME_NUMBER
+            cv::putText(img, std::to_string(i), cv::Point(img.cols / 2, 200), cv::FONT_HERSHEY_SIMPLEX, 5, cv::Scalar(255, 255, 255), 3,
+                        cv::LINE_AA);
 #endif
             correct_frame(img, colRange, grayBuffer, sobelBuffer1, sobelBuffer2, line_starts, line_ends, corrected);
 
