@@ -341,10 +341,10 @@ void interpolate_line_starts(vector<int> &line_starts) {
                     // Line_start values from before *and* after the current gap are known.
                     // This means it is an inner gap and we can interpolate the missing values.
                     for (int k = current_gap_begin; k < i; ++k) {
-                        // From current_segment_begin to i-1
-                        // Total weight: (i-1-current_segment_begin+1) = i-current_segment_begin
-                        line_starts.at(k) = static_cast<int>(
-                            ((i - 1 - k) * line_start_before + (k - current_gap_begin) * line_start_after) / (i - current_gap_begin));
+                        //  From current_segment_begin to i-1
+                        //  Total weight: (i-1-current_segment_begin+1) = i-current_segment_begin
+                        line_starts.at(k) = static_cast<int>(round(
+                            ((i - 1 - k) * line_start_before + (k - current_gap_begin) * line_start_after) / (i - current_gap_begin)));
                     }
                 } else {
                     // This is an outer gap. We can only extrapolate.
