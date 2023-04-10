@@ -194,15 +194,18 @@ void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int di
     line_starts.resize(sobelX.rows, MISSING);
 
     int x_start, x_step, x_stop;
-    if (direction == 1) {
+    if (direction == DIRECTION_LEFT_TO_RIGHT) {
         x_step = 1;
         x_start = 0;
         x_stop = sobelX.cols;
-    } else {
+    } else if (direction == DIRECTION_RIGHT_TO_LEFT) {
         x_step = -1;
         x_start = sobelX.cols - 1;
         x_stop = -1;
+    } else {
+        assert(false);
     }
+
     for (int y = 0; y < sobelX.rows; ++y) {
         line_starts[y] = MISSING;
         for (int x = x_start; x != x_stop; x += x_step) {
