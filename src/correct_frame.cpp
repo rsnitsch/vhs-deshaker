@@ -26,9 +26,11 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
     cv::Mat &gray = grayBuffer;
     cv::cvtColor(input.colRange(0, colRange), gray, cv::COLOR_BGR2GRAY);
     cv::Sobel(gray, sobelBuffer1, CV_32F, 1, 0);
+    assert(sobelBuffer1.cols == colRange);
 
     cv::cvtColor(input.colRange(input.cols - colRange, input.cols), gray, cv::COLOR_BGR2GRAY);
     cv::Sobel(gray, sobelBuffer2, CV_32F, 1, 0);
+    assert(sobelBuffer2.cols == colRange);
 
     vector<int> &line_starts = line_starts_buffer;
     vector<int> &line_ends = line_ends_buffer;
@@ -387,4 +389,13 @@ void interpolate_line_starts(vector<int> &line_starts) {
             }
         }
     }
+
+#ifndef NDEBUG
+    // All gaps must have been filled!
+    for (int i = 0; i < line_starts.size(); ++i) {
+        if (line_starts.at(i) == MISSING) {
+            assert(false);
+        }
+    }
+#endif
 }
