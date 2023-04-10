@@ -176,7 +176,13 @@ void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv
     assert(img.type() == CV_8UC3);
     for (int y = 0; y < img.size().height; ++y) {
         if (line_starts.at(y) != MISSING) {
-            img.at<cv::Vec3b>(y, line_starts.at(y) + x_offset) = color;
+            if ((line_starts.at(y) + x_offset) < 0) {
+                // Negative line_start. Draw the entire row red.
+                // TODO: Better visualization of negative line_starts.
+                img.row(y) = cv::Vec3b(0, 0, 255);
+            } else {
+                img.at<cv::Vec3b>(y, line_starts.at(y) + x_offset) = color;
+            }
         }
     }
 }
