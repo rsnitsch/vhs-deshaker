@@ -342,8 +342,8 @@ void interpolate_line_starts(vector<int> &line_starts) {
                     int x1 = i;
                     int y0 = line_start_before;
                     int y1 = line_start_after;
-                    int x_range = i - (current_gap_begin - 1);
-                    int y_range = line_start_after - line_start_before;
+                    int x_range = x1 - x0;
+                    int y_range = y1 - y0;
 
                     for (int k = current_gap_begin; k < i; ++k) {
                         // Linear interpolation.
