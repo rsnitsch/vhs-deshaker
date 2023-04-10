@@ -17,5 +17,3 @@
   because I bet it will utterly confuse some people.
 - `draw_line_starts` adds to the confusion because you can pass `line_ends` with an `x_offset` to draw
   the edge at the right side of the image frame
-- `interpolate_line_starts` could be split into separate extrapolation and interpolation functions. By
-  splitting these tasks the code could be a lot cleaner.

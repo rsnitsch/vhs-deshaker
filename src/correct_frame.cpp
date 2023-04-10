@@ -13,6 +13,8 @@ void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int di
 void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes);
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1,
                            vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count);
+void fill_gaps_in_line_starts(vector<int> &line_starts);
+bool extrapolate_line_starts(vector<int> &line_starts);
 void interpolate_line_starts(vector<int> &line_starts);
 
 const int MISSING = INT_MIN;
@@ -57,8 +59,8 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
                           merged_from_ends_count);
     auto line_starts_merged = line_starts;
 
-    interpolate_line_starts(line_starts);
-    auto line_starts_interpolated = line_starts;
+    fill_gaps_in_line_starts(line_starts);
+    auto line_starts_gapfilled = line_starts;
 
     cv::Mat line_starts_mat(line_starts);
     cv::blur(line_starts_mat, line_starts_mat, cv::Size(1, 51));
@@ -109,11 +111,11 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
 
 #ifdef ENABLE_VISUALIZATIONS
     // After interpolating: cyan.
-    cv::Mat debug_image_line_starts_interpolated = input.clone();
-    draw_line_starts(debug_image_line_starts_interpolated, line_starts_interpolated, cv::Vec3b(255, 0, 255), 0);
-    draw_line_starts(debug_image_line_starts_interpolated, line_starts_merged, color_for_line_starts, 0);
-    cv::namedWindow("4 - line_starts_interpolated");
-    cv::imshow("4 - line_starts_interpolated", debug_image_line_starts_interpolated);
+    cv::Mat debug_image_line_starts_gapfilled = input.clone();
+    draw_line_starts(debug_image_line_starts_gapfilled, line_starts_gapfilled, cv::Vec3b(255, 0, 255), 0);
+    draw_line_starts(debug_image_line_starts_gapfilled, line_starts_merged, color_for_line_starts, 0);
+    cv::namedWindow("4 - line_starts_gapfilled");
+    cv::imshow("4 - line_starts_gapfilled", debug_image_line_starts_gapfilled);
     waitKey = true;
 #endif
 
@@ -338,101 +340,18 @@ void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &l
 }
 
 /**
- * Fills in gaps in the line_start data via linear interpolation (for inner gaps) and by extrapolating
- * via nearest-known-value replication (for outer gaps at the top/bottom of a frame).
- *
- * @todo    This function could be split into a separate extrapolation (for outer gaps) and interpolation
- *          function (for inner gaps). By splitting these tasks the code would be easier to understand.
+ * Fills in gaps in the line_start data by nearest-known-value extrapolation (for outer gaps)
+ * and linear interpolation (for inner gaps).
  */
-void interpolate_line_starts(vector<int> &line_starts) {
-    // Constant used to indicate that we are currently searching for the beginning of a gap segment.
-    const int SEARCHING_GAP = -2;
-    int current_gap_begin = SEARCHING_GAP;
-    for (int i = 0; i < line_starts.size(); ++i) {
-        if (current_gap_begin == SEARCHING_GAP && line_starts.at(i) == MISSING) {
-            // The beginning of a gap has been found.
-            current_gap_begin = i;
-
-            if (i == line_starts.size() - 1) {
-                // Dirty hack for the rare case that the last row of the frame is MISSING,
-                // but the rows above it are not. In this case the for-loop would not be
-                // entered again (because the end of line_starts is reached). Therefore
-                // the gap filling logic would not get executed to fill the last row.
-                //
-                // Reducing i ensures that the for-loop is entered again, only that this time
-                // the current_gap_begin has already been set.
-                i = i - 1;
-                continue;
-            }
-        } else if (current_gap_begin != SEARCHING_GAP) {
-            if (line_starts.at(i) != MISSING || i == line_starts.size() - 1) {
-                // The current gap ends here, either because we found a line_start or because we reached the end of the
-                // line_starts vector (i.e. the bottom row of the frame).
-
-                // For interpolation, we need to determine the last known line_start values from before the gap
-                // and from after the gap.
-                double line_start_after = MISSING;
-                double line_start_before = MISSING;
-                if (i != line_starts.size() - 1) {
-                    line_start_after = line_starts.at(i);
-                }
-                if (current_gap_begin != 0) {
-                    line_start_before = line_starts.at(current_gap_begin - 1);
-                }
-
-                double interpolated = 0;
-                if (line_start_after != MISSING && line_start_before != MISSING) {
-                    // Line_start values from before *and* after the current gap are known.
-                    // This means it is an inner gap and we can interpolate the missing values.
-                    int x0 = current_gap_begin - 1;
-                    int x1 = i;
-                    int y0 = line_start_before;
-                    int y1 = line_start_after;
-                    int x_range = x1 - x0;
-                    int y_range = y1 - y0;
-
-                    for (int k = current_gap_begin; k < i; ++k) {
-                        // Linear interpolation.
-                        double x = k;
-                        line_starts.at(k) = static_cast<int>(round(y0 + (x - x0) / x_range * y_range));
-                    }
-                } else {
-                    // This is an outer gap. We can only extrapolate.
-                    if (line_start_after != MISSING) {
-                        // The outer gap is towards the top of the frame.
-                        interpolated = line_start_after;
-                    } else if (line_start_before != MISSING) {
-                        // The outer gap is towards the bottom of the frame.
-                        interpolated = line_start_before;
-                    } else {
-                        // Neither a line_start value from before the gap is known nor a line_start value from after the gap.
-                        // This means that no line_start data is available for this frame at all. Neither interpolation nor
-                        // extrapolation is possible.
-                        assert(i == line_starts.size() - 1);
-                        return;
-                    }
-
-                    // Extrapolate by simply replicating the closest known line_start value.
-                    // Like BORDER_REPLICATE in OpenCV.
-                    interpolated = round(interpolated);
-                    int interpolated_int = static_cast<int>(interpolated);
-                    for (int k = current_gap_begin; k < i; ++k) {
-                        line_starts.at(k) = interpolated_int;
-                    }
-
-                    if (i == line_starts.size() - 1) {
-                        line_starts.at(i) = interpolated_int;
-                    }
-                }
-
-                // Search for new segment.
-                current_gap_begin = SEARCHING_GAP;
-            }
-        }
+void fill_gaps_in_line_starts(vector<int> &line_starts) {
+    bool no_outer_gaps_remain = extrapolate_line_starts(line_starts);
+    if (no_outer_gaps_remain) {
+        interpolate_line_starts(line_starts);
     }
 
 #ifndef NDEBUG
     // All gaps must have been filled!
+    // (Unless all line_starts are missing.)
     bool allMissing = true;
     bool someMissing = false;
     for (int i = 0; i < line_starts.size(); ++i) {
@@ -443,5 +362,122 @@ void interpolate_line_starts(vector<int> &line_starts) {
         }
     }
     assert(allMissing || !someMissing);
+#endif
+}
+
+/**
+ * Fills in gaps in the line_start data at the beginning (top of frame) and end (bottom of frame)
+ * by nearest-known-value replication.
+ *
+ * @returns true if outer gaps were filled (or no outer gaps were present in the first place),
+ *          returns false if there are gaps but they could not be filled because no line_starts are
+ *          known at all to extrapolate from.
+ */
+bool extrapolate_line_starts(vector<int> &line_starts) {
+    // Gap at the beginning?
+    if (line_starts.at(0) == MISSING) {
+        // Find nearest known value.
+        int first_known_value_index = -1;
+        for (int i = 0; i < line_starts.size(); ++i) {
+            if (line_starts.at(i) != MISSING) {
+                first_known_value_index = i;
+                break;
+            }
+        }
+
+        if (first_known_value_index == -1) {
+            // No known values at all. Nothing to do.
+            return false;
+        }
+
+        // Fill gap.
+        for (int i = first_known_value_index - 1; i >= 0; --i) {
+            line_starts.at(i) = line_starts.at(first_known_value_index);
+        }
+    }
+
+    // Gap at the end?
+    if (line_starts.at(line_starts.size() - 1) == MISSING) {
+        // Find nearest known value.
+        int last_known_value_index = -1;
+        for (int i = line_starts.size() - 1; i >= 0; --i) {
+            if (line_starts.at(i) != MISSING) {
+                last_known_value_index = i;
+                break;
+            }
+        }
+
+        if (last_known_value_index == -1) {
+            // No known values at all. Nothing to do.
+            return false;
+        }
+
+        // Fill gap.
+        for (int i = last_known_value_index + 1; i < line_starts.size(); ++i) {
+            line_starts.at(i) = line_starts.at(last_known_value_index);
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Fills inner gaps in the line_start data via linear interpolation.
+ *
+ * @throws std::exception   if the line_starts data contains missing values at the beginning or end. Always use
+ *                          extrapolate_line_starts first.
+ */
+void interpolate_line_starts(vector<int> &line_starts) {
+    if (line_starts.at(0) == MISSING || line_starts.at(line_starts.size() - 1) == MISSING) {
+        throw std::exception(
+            "interpolate_line_starts cannot handle missing line_starts at the beginning or end. Always use extrapolate_line_starts first.");
+    }
+
+    const int SEARCHING_GAP = -2;
+    int current_gap_begin = SEARCHING_GAP;
+    int current_gap_end = SEARCHING_GAP;
+    int known_value_before_gap = MISSING;
+    int known_value_after_gap = MISSING;
+    for (int i = 0; i < line_starts.size(); ++i) {
+        if (current_gap_begin == SEARCHING_GAP) {
+            // Searching for the start of a gap.
+            if (line_starts.at(i) == MISSING) {
+                // The beginning of a gap has been found.
+                current_gap_begin = i;
+            } else {
+                known_value_before_gap = line_starts.at(i);
+            }
+        } else {
+            // Searching for the end of the current gap.
+            if (line_starts.at(i) != MISSING) {
+                current_gap_end = i - 1;
+
+                assert(known_value_before_gap != MISSING);
+                known_value_after_gap = line_starts.at(i);
+
+                // Linear interpolation.
+                int x0 = current_gap_begin - 1;
+                int x1 = i;
+                int y0 = known_value_before_gap;
+                int y1 = known_value_after_gap;
+                int x_range = x1 - x0;
+                int y_range = y1 - y0;
+
+                for (int k = current_gap_begin; k <= current_gap_end; ++k) {
+                    double x = k;
+                    line_starts.at(k) = static_cast<int>(round(y0 + (x - x0) / x_range * y_range));
+                }
+
+                // Search next gaps.
+                current_gap_begin = SEARCHING_GAP;
+            }
+        }
+    }
+
+#ifndef NDEBUG
+    // All gaps must have been filled!
+    for (int i = 0; i < line_starts.size(); ++i) {
+        assert(line_starts.at(i) != MISSING);
+    }
 #endif
 }
