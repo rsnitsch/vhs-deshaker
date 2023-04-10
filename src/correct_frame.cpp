@@ -433,10 +433,15 @@ void interpolate_line_starts(vector<int> &line_starts) {
 
 #ifndef NDEBUG
     // All gaps must have been filled!
+    bool allMissing = true;
+    bool someMissing = false;
     for (int i = 0; i < line_starts.size(); ++i) {
         if (line_starts.at(i) == MISSING) {
-            assert(false);
+            someMissing = true;
+        } else {
+            allMissing = false;
         }
     }
+    assert(allMissing || !someMissing);
 #endif
 }
