@@ -122,12 +122,6 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
     waitKey = true;
 #endif
 
-#ifdef ENABLE_VISUALIZATIONS
-    if (waitKey) {
-        cv::waitKey();
-    }
-#endif
-
     // Use the line_start data obtained by the above code to shift the content of all rows of the frame
     // such that each row begins at TARGET_LINE_START. TARGET_LINE_START is the expected (ideal) width of the
     // left- and right-hand black borders in a decent digitized VHS video.
@@ -164,6 +158,18 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
             }
         }
     }
+
+#ifdef ENABLE_VISUALIZATIONS
+    cv::namedWindow("6 - out");
+    cv::imshow("6 - out", out);
+    waitKey = true;
+#endif
+
+#ifdef ENABLE_VISUALIZATIONS
+    if (waitKey) {
+        cv::waitKey();
+    }
+#endif
 }
 
 void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv::Vec3b &color, int x_offset) {
