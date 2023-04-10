@@ -376,6 +376,10 @@ void interpolate_line_starts(vector<int> &line_starts) {
                     for (int k = current_gap_begin; k < i; ++k) {
                         line_starts.at(k) = interpolated_int;
                     }
+
+                    if (i == line_starts.size() - 1) {
+                        line_starts.at(i) = interpolated_int;
+                    }
                 }
 
                 // Search for new segment.
