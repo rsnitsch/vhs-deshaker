@@ -15,7 +15,7 @@ void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &l
                            vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count);
 void interpolate_line_starts(vector<int> &line_starts);
 
-const int MISSING = -1;
+const int MISSING = INT_MIN;
 const int DIRECTION_LEFT_TO_RIGHT = 1;
 const int DIRECTION_RIGHT_TO_LEFT = -1;
 
