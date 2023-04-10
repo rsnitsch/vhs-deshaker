@@ -352,6 +352,18 @@ void interpolate_line_starts(vector<int> &line_starts) {
         if (current_gap_begin == SEARCHING_GAP && line_starts.at(i) == MISSING) {
             // The beginning of a gap has been found.
             current_gap_begin = i;
+
+            if (i == line_starts.size() - 1) {
+                // Dirty hack for the rare case that the last row of the frame is MISSING,
+                // but the rows above it are not. In this case the for-loop would not be
+                // entered again (because the end of line_starts is reached). Therefore
+                // the gap filling logic would not get executed to fill the last row.
+                //
+                // Reducing i ensures that the for-loop is entered again, only that this time
+                // the current_gap_begin has already been set.
+                i = i - 1;
+                continue;
+            }
         } else if (current_gap_begin != SEARCHING_GAP) {
             if (line_starts.at(i) != MISSING || i == line_starts.size() - 1) {
                 // The current gap ends here, either because we found a line_start or because we reached the end of the
