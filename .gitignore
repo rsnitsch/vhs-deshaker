@@ -2,3 +2,4 @@
 *.mp4
 _build/
 _install/
+*/CACHEDIR.TAG
