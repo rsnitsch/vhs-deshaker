@@ -90,6 +90,7 @@ Example command:
 ## See also
 
 Online threads discussing the issue:
+
 - https://forum.videohelp.com/threads/394670-VHS-Horizontal-Stabilisation
 - https://forum.videohelp.com/threads/392186-Way-too-shakey-captured-VHS-video
 - https://forum.doom9.org/showthread.php?t=174756
