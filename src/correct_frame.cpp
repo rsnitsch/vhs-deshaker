@@ -72,11 +72,13 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
     waitKey = true;
 #endif
 
+    int x_offset = input.cols - 2 * TARGET_LINE_START;
+
 #ifdef ENABLE_VISUALIZATIONS
     // Raw line starts: green.
     cv::Mat debug_image_line_starts_raw = input.clone();
     draw_line_starts(debug_image_line_starts_raw, line_starts_raw, color_for_line_starts, 0);
-    draw_line_starts(debug_image_line_starts_raw, line_ends_raw, color_for_line_starts, input.cols - colRange);
+    draw_line_starts(debug_image_line_starts_raw, line_ends_raw, color_for_line_starts, x_offset);
     cv::namedWindow("1 - line_starts_raw");
     cv::imshow("1 - line_starts_raw", debug_image_line_starts_raw);
     waitKey = true;
@@ -86,7 +88,7 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
     // After denoising: red.
     cv::Mat debug_image_line_starts_after_denoising = input.clone();
     draw_line_starts(debug_image_line_starts_after_denoising, line_starts_after_denoising, color_for_line_starts, 0);
-    draw_line_starts(debug_image_line_starts_after_denoising, line_ends_after_denoising, color_for_line_starts, input.cols - colRange);
+    draw_line_starts(debug_image_line_starts_after_denoising, line_ends_after_denoising, color_for_line_starts, x_offset);
     cv::namedWindow("2 - line_starts_after_denoising");
     cv::imshow("2 - line_starts_after_denoising", debug_image_line_starts_after_denoising);
     waitKey = true;
