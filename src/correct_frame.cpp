@@ -19,6 +19,10 @@ const int MISSING = INT_MIN;
 const int DIRECTION_LEFT_TO_RIGHT = 1;
 const int DIRECTION_RIGHT_TO_LEFT = -1;
 
+// TARGET_LINE_START is the expected(ideal) width of the
+// left- and right-hand black borders in a decent digitized VHS video.
+const int TARGET_LINE_START = 8;
+
 void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, cv::Mat &sobelBuffer2,
                    vector<int> &line_starts_buffer, vector<int> &line_ends_buffer, cv::Mat &out) {
     out.create(input.size(), input.type());
@@ -123,10 +127,7 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::
 #endif
 
     // Use the line_start data obtained by the above code to shift the content of all rows of the frame
-    // such that each row begins at TARGET_LINE_START. TARGET_LINE_START is the expected (ideal) width of the
-    // left- and right-hand black borders in a decent digitized VHS video.
-    const int TARGET_LINE_START = 8;
-
+    // such that each row begins at TARGET_LINE_START.
     for (int y = 0; y < input.rows; ++y) {
         cv::Mat input_row = input.row(y);
         cv::Mat output_row = out.row(y);
@@ -232,7 +233,21 @@ void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int di
 #if 0
 				input.at<cv::Vec3b>(y, x) = cv::Vec3b(255, 255, 255);
 #endif
+
+#if 1
+                if (direction == DIRECTION_LEFT_TO_RIGHT) {
+                    line_starts[y] = x;
+                } else if (direction == DIRECTION_RIGHT_TO_LEFT) {
+                    int reference_point = (sobelX.cols - 2 * TARGET_LINE_START);
+                    line_starts[y] = x - reference_point;
+                }
+#else
+                // Old code that only worked because my colRange value (15) happened to be close to 2 * TARGET_LINE_START.
+                // And TARGET_LINE_START equaled 8 for my videos. So 2 * TARGET_LINE_START was 16, which is almost the same
+                // as colRange (15).
                 line_starts[y] = x;
+#endif
+
                 break;
             }
         }
