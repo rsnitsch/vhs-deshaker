@@ -1,5 +1,6 @@
 #include <chrono>
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <opencv2/videoio.hpp>
 #include <string>
@@ -50,6 +51,16 @@ int main(int argc, char *argv[]) {
     if (input_file == output_file) {
         cerr << "ERROR: Input file matches output file." << endl;
         return 1;
+    }
+
+    // Check if the input file exists and can be opened.
+    {
+        ifstream input_file_stream(input_file);
+        if (!input_file_stream.good()) {
+            cerr << "ERROR: Input file cannot be opened." << endl;
+            return 1;
+        }
+        input_file_stream.close();
     }
 
     cout << "Processing file " << input_file << " ..." << endl;
