@@ -87,6 +87,19 @@ Example command:
 
     docker run -it --rm -v "$(pwd):/videos" --user $(id -u):$(id -g) rsnitsch/vhs-deshaker:latest <input-file> <output-file> [<framerate>]
 
+### Docker troubleshooting: Input file cannot be opened
+
+If the input file cannot be opened, double-check that your input file is actually visible within docker. The option `-v "$(pwd):/videos"`
+*should* map the current working directory (on your host system) inside the docker container at `/videos` (which is the working directory
+of vhs-deshaker inside the docker container).
+
+You can use the following command to list the files visible inside the vhs-deshaker docker container at `/videos`:
+
+    docker run --entrypoint ls -it --rm -v "$(pwd):/videos" --user $(id -u):$(id -g) rsnitsch/vhs-deshaker:latest -Al
+
+This executes `ls -Al` inside the docker container which lists the files in `/videos`. You should see the same contents as in your
+current working directory on your host system. If not, then you have to find out why and fix this first.
+
 ## See also
 
 Online threads discussing the issue:
