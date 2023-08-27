@@ -20,7 +20,32 @@ int main(int argc, char *argv[]) {
 
     string input_file = argv[1];
     string output_file = argv[2];
-    double framerate = (argc == 4) ? stod(argv[3]) : -1;
+    double framerate = -1;
+    if (argc == 4) {
+        try {
+            size_t pos = -1;
+            framerate = stod(argv[3], &pos);
+
+            // Make sure that the entire string is parsed as a valid number.
+            if (pos != strlen(argv[3])) {
+                cerr << "ERROR: Invalid framerate (not a number): " << argv[3] << endl;
+                return 1;
+            }
+
+            if (framerate <= 0) {
+                cerr << "ERROR: Invalid framerate (must be a positive number)" << endl;
+                return 1;
+            }
+
+            cout << "Parsed framerate: " << framerate << endl;
+        } catch (const invalid_argument &e) {
+            cerr << "ERROR: Invalid framerate (not a number): " << e.what() << endl;
+            return 1;
+        } catch (const out_of_range &e) {
+            cerr << "ERROR: Invalid framerate (number is out of range): " << e.what() << endl;
+            return 1;
+        }
+    }
 
     if (input_file == output_file) {
         cerr << "ERROR: Input file matches output file." << endl;
