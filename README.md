@@ -1,6 +1,19 @@
-# vhs-deshaker
+# vhs-deshaker <!-- omit from toc -->
 
 This tool is for fixing a very specific horizontal shaking issue that affects some digitized VHS videos.
+
+## Table of Contents <!-- omit from toc -->
+
+- [Example](#example)
+- [How does vhs-deshaker work?](#how-does-vhs-deshaker-work)
+- [Install](#install)
+- [Usage](#usage)
+- [Build instructions](#build-instructions)
+- [Docker image](#docker-image)
+  - [Docker troubleshooting: Input file cannot be opened](#docker-troubleshooting-input-file-cannot-be-opened)
+- [See also](#see-also)
+
+## Example
 
 Input example:
 
