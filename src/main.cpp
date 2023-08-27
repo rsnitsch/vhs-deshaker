@@ -37,8 +37,6 @@ int main(int argc, char *argv[]) {
                 cerr << "ERROR: Invalid framerate (must be a positive number)" << endl;
                 return 1;
             }
-
-            cout << "Parsed framerate: " << framerate << endl;
         } catch (const invalid_argument &e) {
             cerr << "ERROR: Invalid framerate (not a number): " << e.what() << endl;
             return 1;
@@ -73,8 +71,15 @@ int main(int argc, char *argv[]) {
     double fps = -1;
     if (framerate <= 0) {
         fps = videoCapture.get(CAP_PROP_FPS);
+        if (fps <= 0) {
+            cerr << "Could not get framerate from input file. Please provide a framerate manually." << endl;
+            return 1;
+        }
+
+        cout << "Using same framerate as in input file: " << fps << endl;
     } else {
         fps = framerate;
+        cout << "Using the user-specified framerate: " << fps << endl;
     }
 
     int fourcc = VideoWriter::fourcc('H', 'F', 'Y', 'U');
