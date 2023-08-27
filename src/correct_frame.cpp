@@ -9,7 +9,7 @@
 using std::vector;
 
 // Internal helper methods.
-void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int direction);
+void get_raw_line_starts(const cv::Mat &gray, const cv::Mat &sobelX, vector<int> &line_starts, int direction);
 void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes);
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1,
                            vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count);
@@ -25,23 +25,22 @@ const int DIRECTION_RIGHT_TO_LEFT = -1;
 // left- and right-hand black borders in a decent digitized VHS video.
 const int TARGET_LINE_START = 8;
 
-void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer, cv::Mat &sobelBuffer1, cv::Mat &sobelBuffer2,
-                   vector<int> &line_starts_buffer, vector<int> &line_ends_buffer, cv::Mat &out) {
+void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer1, cv::Mat &grayBuffer2, cv::Mat &sobelBuffer1,
+                   cv::Mat &sobelBuffer2, vector<int> &line_starts_buffer, vector<int> &line_ends_buffer, cv::Mat &out) {
     out.create(input.size(), input.type());
 
-    cv::Mat &gray = grayBuffer;
-    cv::cvtColor(input.colRange(0, colRange), gray, cv::COLOR_BGR2GRAY);
-    cv::Sobel(gray, sobelBuffer1, CV_32F, 1, 0);
+    cv::cvtColor(input.colRange(0, colRange), grayBuffer1, cv::COLOR_BGR2GRAY);
+    cv::Sobel(grayBuffer1, sobelBuffer1, CV_32F, 1, 0);
     assert(sobelBuffer1.cols == colRange);
 
-    cv::cvtColor(input.colRange(input.cols - colRange, input.cols), gray, cv::COLOR_BGR2GRAY);
-    cv::Sobel(gray, sobelBuffer2, CV_32F, 1, 0);
+    cv::cvtColor(input.colRange(input.cols - colRange, input.cols), grayBuffer2, cv::COLOR_BGR2GRAY);
+    cv::Sobel(grayBuffer2, sobelBuffer2, CV_32F, 1, 0);
     assert(sobelBuffer2.cols == colRange);
 
     vector<int> &line_starts = line_starts_buffer;
     vector<int> &line_ends = line_ends_buffer;
-    get_raw_line_starts(sobelBuffer1, line_starts, DIRECTION_LEFT_TO_RIGHT);
-    get_raw_line_starts(sobelBuffer2, line_ends, DIRECTION_RIGHT_TO_LEFT);
+    get_raw_line_starts(grayBuffer1, sobelBuffer1, line_starts, DIRECTION_LEFT_TO_RIGHT);
+    get_raw_line_starts(grayBuffer2, sobelBuffer2, line_ends, DIRECTION_RIGHT_TO_LEFT);
 
     auto line_starts_raw = line_starts;
     auto line_ends_raw = line_ends;
@@ -200,15 +199,15 @@ void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv
  * e.g. all lines would start at X = 8 and end at X = W - 8 (where 8 is the size of the black border to the left
  * and right).
  *
- * @param sobelX 	    must be a ROI that contains either the left-hand columns or right-hand columns of a video frame's horizontal
- *                      image gradient
+ * @param gray          must be a ROI that contains either the left-hand columns or right-hand columns of a video frame
+ * @param sobelX 	    the horizontal image gradient of the gray ROI
  * @param direction     indicates whether sobelX is based on the left-hand part of the video (use the constant DIRECTION_LEFT_TO_RIGHT) or
  * 	                    the right-hand part of the video (use constant DIRECTION_RIGHT_TO_LEFT).
  * @param line_starts   the determined line starts are saved in this list, i.e. line_starts.size() == sobelX.rows. The line
  * 	                    start data may be incomplete, i.e. for some rows it may be impossible to determine the start
  *                      position. The respective missing items in line_starts get assigned the special constant MISSING.
  */
-void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int direction) {
+void get_raw_line_starts(const cv::Mat &gray, const cv::Mat &sobelX, vector<int> &line_starts, int direction) {
     assert(direction == DIRECTION_LEFT_TO_RIGHT || direction == DIRECTION_RIGHT_TO_LEFT);
     line_starts.resize(sobelX.rows, MISSING);
 
@@ -228,6 +227,12 @@ void get_raw_line_starts(const cv::Mat &sobelX, vector<int> &line_starts, int di
     for (int y = 0; y < sobelX.rows; ++y) {
         line_starts[y] = MISSING;
         for (int x = x_start; x != x_stop; x += x_step) {
+            // If there is no pure black at the edge, skip this row. The line start/end
+            // cannot be determined.
+            if (x == x_start && gray.at<uint8_t>(y, x) > 50) {
+                break;
+            }
+
             // double dX = cv::norm(next_pixel - pixel);
             double dX = abs(sobelX.at<float>(y, x));
 
