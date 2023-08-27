@@ -30,11 +30,11 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer1, cv:
     out.create(input.size(), input.type());
 
     cv::cvtColor(input.colRange(0, colRange), grayBuffer1, cv::COLOR_BGR2GRAY);
-    cv::Sobel(grayBuffer1, sobelBuffer1, CV_32F, 1, 0);
+    cv::Sobel(grayBuffer1, sobelBuffer1, CV_32F, 1, 0, 1);
     assert(sobelBuffer1.cols == colRange);
 
     cv::cvtColor(input.colRange(input.cols - colRange, input.cols), grayBuffer2, cv::COLOR_BGR2GRAY);
-    cv::Sobel(grayBuffer2, sobelBuffer2, CV_32F, 1, 0);
+    cv::Sobel(grayBuffer2, sobelBuffer2, CV_32F, 1, 0, 1);
     assert(sobelBuffer2.cols == colRange);
 
     vector<int> &line_starts = line_starts_buffer;
