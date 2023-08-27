@@ -16,7 +16,7 @@
  * @param grayBuffer1 A Mat that can be reused as buffer for the grayscale version of the input frame (left border).
  * @param grayBuffer1 A Mat that can be reused as buffer for the grayscale version of the input frame (right border).
  * @param sobelBuffer1 A Mat that can be reused as buffer for the first Sobel-processed frame region (at left border).
- * @param sobelBuffer2 A Mat that can be reused as buffer for the second Sobel-processed frame regions (at right border).
+ * @param sobelBuffer2 A Mat that can be reused as buffer for the second Sobel-processed frame region (at right border).
  * @param line_starts_buffer A vector that can be reused as buffer to store line starts.
  * @param line_ends_buffer A vector that can be reused as buffer to store line ends.
  * @param out The corrected output frame (BGR).
