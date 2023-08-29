@@ -1,4 +1,4 @@
-FROM debian:stable AS builder
+FROM debian:12 AS builder
 LABEL org.opencontainers.image.authors="mail@robertnitsch.de"
 LABEL org.opencontainers.image.version="1.0.2"
 LABEL org.opencontainers.image.title="Fix horizontal shaking in digitized VHS videos"
