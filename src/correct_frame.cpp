@@ -429,12 +429,12 @@ bool extrapolate_line_starts(vector<int> &line_starts) {
 /**
  * Fills inner gaps in the line_start data via linear interpolation.
  *
- * @throws std::exception   if the line_starts data contains missing values at the beginning or end. Always use
- *                          extrapolate_line_starts first.
+ * @throws std::logic_error   if the line_starts data contains missing values at the beginning or end. Always use
+ *                            extrapolate_line_starts first.
  */
 void interpolate_line_starts(vector<int> &line_starts) {
     if (line_starts.at(0) == MISSING || line_starts.at(line_starts.size() - 1) == MISSING) {
-        throw std::exception(
+        throw std::logic_error(
             "interpolate_line_starts cannot handle missing line_starts at the beginning or end. Always use extrapolate_line_starts first.");
     }
 

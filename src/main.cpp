@@ -13,7 +13,7 @@ using namespace std;
 // TODO: Add --col-range commandline parameter
 // TODO: Replace the positional framerate parameter with --framerate option
 int main(int argc, char *argv[]) {
-    cout << "vhs-deshaker 1.0.1" << endl << endl;
+    cout << "vhs-deshaker 1.0.2" << endl << endl;
     if (argc != 3 && argc != 4) {
         cerr << "Usage: vhs-deshaker <input-file> <output-file> [<framerate>]" << endl;
         return 1;
