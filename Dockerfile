@@ -22,10 +22,10 @@ RUN cmake --install _build/
 # -----------------------------------
 
 FROM debian:stable
-RUN apt-get update && apt-get -y upgrade && apt-get install -y libopencv-core4.5 \
-    libopencv-highgui4.5 \
-    libopencv-imgproc4.5 \
-    libopencv-videoio4.5 \
+RUN apt-get update && apt-get -y upgrade && apt-get install -y libopencv-core406 \
+    libopencv-highgui406 \
+    libopencv-imgproc406 \
+    libopencv-videoio406 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /vhs-deshaker/_install/bin/vhs-deshaker /usr/bin/vhs-deshaker
 WORKDIR /videos
