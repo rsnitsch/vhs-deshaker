@@ -1,6 +1,19 @@
-# vhs-deshaker
+# vhs-deshaker <!-- omit from toc -->
 
 This tool is for fixing a very specific horizontal shaking issue that affects some digitized VHS videos.
+
+## Table of Contents <!-- omit from toc -->
+
+- [Example](#example)
+- [How does vhs-deshaker work?](#how-does-vhs-deshaker-work)
+- [Install](#install)
+- [Usage](#usage)
+- [Build instructions](#build-instructions)
+- [Docker image](#docker-image)
+  - [Docker troubleshooting: Input file cannot be opened](#docker-troubleshooting-input-file-cannot-be-opened)
+- [See also](#see-also)
+
+## Example
 
 Input example:
 
@@ -81,15 +94,29 @@ See BUILD.md.
 
 ## Docker image
 
-You can also run vhs-deshaker via docker. I provide a docker image at ``rsnitsch/vhs-deshaker:latest``.
+You can also run vhs-deshaker via docker. I provide a docker image at [`rsnitsch/vhs-deshaker`](https://hub.docker.com/r/rsnitsch/vhs-deshaker).
 
 Example command:
 
     docker run -it --rm -v "$(pwd):/videos" --user $(id -u):$(id -g) rsnitsch/vhs-deshaker:latest <input-file> <output-file> [<framerate>]
 
+### Docker troubleshooting: Input file cannot be opened
+
+If the input file cannot be opened, double-check that your input file is actually visible within docker. The option `-v "$(pwd):/videos"`
+*should* map the current working directory (on your host system) inside the docker container at `/videos` (which is the working directory
+of vhs-deshaker inside the docker container).
+
+You can use the following command to list the files visible inside the vhs-deshaker docker container at `/videos`:
+
+    docker run --entrypoint ls -it --rm -v "$(pwd):/videos" --user $(id -u):$(id -g) rsnitsch/vhs-deshaker:latest -Al
+
+This executes `ls -Al` inside the docker container which lists the files in `/videos`. You should see the same contents as in your
+current working directory on your host system. If not, then you have to find out why and fix this first.
+
 ## See also
 
 Online threads discussing the issue:
+
 - https://forum.videohelp.com/threads/394670-VHS-Horizontal-Stabilisation
 - https://forum.videohelp.com/threads/392186-Way-too-shakey-captured-VHS-video
 - https://forum.doom9.org/showthread.php?t=174756

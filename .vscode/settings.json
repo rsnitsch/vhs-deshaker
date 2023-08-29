@@ -2,7 +2,11 @@
     "files.associations": {
         "iostream": "cpp",
         "vector": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "array": "cpp",
+        "istream": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp"
     },
     "editor.formatOnSave": true
 }

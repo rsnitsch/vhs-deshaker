@@ -15,7 +15,7 @@
 void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &videoWriter, const int colRange) {
     int i = 0;
     int frame_count = videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
-    cv::Mat img, corrected, grayBuffer, sobelBuffer1, sobelBuffer2;
+    cv::Mat img, corrected, grayBuffer1, grayBuffer2, sobelBuffer1, sobelBuffer2;
     std::vector<int> line_starts, line_ends;
     while (videoCapture.grab()) {
         videoCapture.retrieve(img);
@@ -28,7 +28,7 @@ void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &vi
             cv::putText(img, std::to_string(i), cv::Point(img.cols / 2, 200), cv::FONT_HERSHEY_SIMPLEX, 5, cv::Scalar(255, 255, 255), 3,
                         cv::LINE_AA);
 #endif
-            correct_frame(img, colRange, grayBuffer, sobelBuffer1, sobelBuffer2, line_starts, line_ends, corrected);
+            correct_frame(img, colRange, grayBuffer1, grayBuffer2, sobelBuffer1, sobelBuffer2, line_starts, line_ends, corrected);
 
 #ifdef ENABLE_DEBUGGING
             cv::namedWindow("Input");
