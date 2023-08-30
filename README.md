@@ -8,6 +8,7 @@ This tool is for fixing a very specific horizontal shaking issue that affects so
 - [How does vhs-deshaker work?](#how-does-vhs-deshaker-work)
 - [Install](#install)
 - [Usage](#usage)
+  - [Pipe video data to ffmpeg directly](#pipe-video-data-to-ffmpeg-directly)
 - [Build instructions](#build-instructions)
 - [Docker image](#docker-image)
   - [Docker troubleshooting: Input file cannot be opened](#docker-troubleshooting-input-file-cannot-be-opened)
@@ -87,6 +88,24 @@ the same YUV 4:4:4 colorspace. I recommend to overwrite this with the ``-pix_fmt
 since many devices do not support H.264 with YUV 4:4:4.
 
 For details on how to use ffmpeg to mux audio/video streams you can read this StackOverflow post: https://stackoverflow.com/a/12943003/623685
+
+### Pipe video data to ffmpeg directly
+
+Raw video output to stdout can be enabled by specifying `stdout` as output file. You can use this to pipe the raw video data directly to ffmpeg.
+
+Example:
+
+    vhs-deshaker input.avi stdout | ffmpeg -f rawvideo -c:v rawvideo -s 720x564 -pix_fmt bgr24 -r 50 -i pipe: -pix_fmt yuv420p deshaked.mp4
+
+Advantages:
+
+- You do not have to keep around an intermediate video file that is extremely large due to the lossless HuffYUV codec.
+- You can deshake and merge the audio stream from the original input file in a single step (not shown in the above example).
+
+Caveats:
+
+- You have to specify the correct video resolution in the call to ffmpeg (e.g. `-s 720x564`).
+- You have to specify the framerate in the call to ffmpeg (e.g. `-r 50`).
 
 ## Build instructions
 
