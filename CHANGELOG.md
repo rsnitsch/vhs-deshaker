@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.3
+
+*Release date: 2023/09/21*
+
+* Fixes a crash that occurred when no line starts have been detected for an entire frame (commit 6312847)
+
 ## v1.0.2
 
 *Release date: 2023/08/29*
