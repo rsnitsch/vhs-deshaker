@@ -13,7 +13,7 @@ void get_raw_line_starts(const cv::Mat &gray, const cv::Mat &sobelX, vector<int>
 void denoise_line_starts(vector<int> &line_starts, vector<int> &segment_sizes);
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1,
                            vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count);
-void fill_gaps_in_line_starts(vector<int> &line_starts);
+bool fill_gaps_in_line_starts(vector<int> &line_starts);
 bool extrapolate_line_starts(vector<int> &line_starts);
 void interpolate_line_starts(vector<int> &line_starts);
 
@@ -58,11 +58,13 @@ void correct_frame(cv::Mat &input, const int colRange, cv::Mat &grayBuffer1, cv:
                           merged_from_ends_count);
     auto line_starts_merged = line_starts;
 
-    fill_gaps_in_line_starts(line_starts);
+    bool someLineStartsKnown = fill_gaps_in_line_starts(line_starts);
     auto line_starts_gapfilled = line_starts;
 
     cv::Mat line_starts_mat(line_starts);
-    cv::blur(line_starts_mat, line_starts_mat, cv::Size(1, 51));
+    if (someLineStartsKnown) {
+        cv::blur(line_starts_mat, line_starts_mat, cv::Size(1, 51));
+    }
 
 #ifdef ENABLE_VISUALIZATIONS
     bool waitKey = false;
@@ -347,14 +349,15 @@ void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &l
 /**
  * Fills in gaps in the line_start data by nearest-known-value extrapolation (for outer gaps)
  * and linear interpolation (for inner gaps).
+ * 
+ * Returns true if at least one line_start value is known, false otherwise.
  */
-void fill_gaps_in_line_starts(vector<int> &line_starts) {
+bool fill_gaps_in_line_starts(vector<int> &line_starts) {
     bool no_outer_gaps_remain = extrapolate_line_starts(line_starts);
     if (no_outer_gaps_remain) {
         interpolate_line_starts(line_starts);
     }
 
-#ifndef NDEBUG
     // All gaps must have been filled!
     // (Unless all line_starts are missing.)
     bool allMissing = true;
@@ -367,7 +370,8 @@ void fill_gaps_in_line_starts(vector<int> &line_starts) {
         }
     }
     assert(allMissing || !someMissing);
-#endif
+
+    return !allMissing;
 }
 
 /**

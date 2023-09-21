@@ -2,6 +2,8 @@
 
 ## Features
 
+- piping to ffmpeg
+  - https://stackoverflow.com/a/61281547/623685
 - add `--col-range` commandline option
 - add `--framerate` commandline option (replacing the previously used *positional* framerate parameter)
 - add commandline parameter to set `TARGET_LINE_START`. This is the regular/ideal width of the pure black

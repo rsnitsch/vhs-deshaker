@@ -6,7 +6,11 @@
         "array": "cpp",
         "istream": "cpp",
         "tuple": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "ostream": "cpp",
+        "iosfwd": "cpp",
+        "chrono": "cpp",
+        "fstream": "cpp"
     },
     "editor.formatOnSave": true
 }
