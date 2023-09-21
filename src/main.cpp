@@ -177,7 +177,9 @@ int main(int argc, char *argv[]) {
     process_single_threaded(videoCapture, *videoWriter, colRange, output_file == "stdout");
     delete videoWriter;
     videoWriter = nullptr;
-    fclose(stdout);
+    if (output_file == "stdout") {
+        fclose(stdout);
+    }
 
     end = chrono::system_clock::now();
     long elapsed_milliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();
