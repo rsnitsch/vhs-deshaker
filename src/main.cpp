@@ -13,11 +13,19 @@
 #include <io.h>
 #endif
 
+#include "ConditionalOStream.h"
 #include "StdoutVideoWriter.h"
 #include "process_single_threaded.h"
 
 using namespace cv;
-using namespace std;
+namespace chrono = std::chrono;
+using std::cerr;
+using std::endl;
+using std::ifstream;
+using std::invalid_argument;
+using std::out_of_range;
+using std::stod;
+using std::string;
 
 // TODO: Add --col-range commandline parameter
 // TODO: Replace the positional framerate parameter with --framerate option
@@ -38,9 +46,8 @@ int main(int argc, char *argv[]) {
     string output_file = argv[2];
 
     bool piping_to_stdout = (output_file == "stdout");
-    if (!piping_to_stdout) {
-        cout << "vhs-deshaker 1.0.2" << endl << endl;
-    }
+    ConditionalOStream cout(std::cout, !piping_to_stdout);
+    cout << "vhs-deshaker 1.0.2" << endl << endl;
 
     double framerate = -1;
     if (argc == 4) {
@@ -86,9 +93,7 @@ int main(int argc, char *argv[]) {
         input_file_stream.close();
     }
 
-    if (!piping_to_stdout) {
-        cerr << "Processing file " << input_file << " ..." << endl;
-    }
+    cout << "Processing file " << input_file << " ..." << endl;
     VideoCapture videoCapture(input_file);
     if (!videoCapture.isOpened()) {
         cerr << "Could not open input file" << endl;
@@ -103,14 +108,10 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (!piping_to_stdout) {
-            cout << "Using same framerate as in input file: " << fps << endl;
-        }
+        cout << "Using same framerate as in input file: " << fps << endl;
     } else {
         fps = framerate;
-        if (!piping_to_stdout) {
-            cout << "Using the user-specified framerate: " << fps << endl;
-        }
+        cout << "Using the user-specified framerate: " << fps << endl;
     }
 
     int fourcc = VideoWriter::fourcc('H', 'F', 'Y', 'U');
@@ -138,6 +139,7 @@ int main(int argc, char *argv[]) {
     delete videoWriter;
     videoWriter = nullptr;
     if (piping_to_stdout) {
+        // TODO: Reconsider this.
         fclose(stdout);
     }
 
@@ -146,11 +148,9 @@ int main(int argc, char *argv[]) {
     time_t start_time = chrono::system_clock::to_time_t(start);
     time_t end_time = chrono::system_clock::to_time_t(end);
 
-    if (!piping_to_stdout) {
-        cout << "Started at  " << ctime(&start_time);
-        cout << "Finished at " << ctime(&end_time);
-        cout << "Elapsed time: " << elapsed_milliseconds << " milliseconds" << endl;
-    }
+    cout << "Started at  " << ctime(&start_time);
+    cout << "Finished at " << ctime(&end_time);
+    cout << "Elapsed time: " << elapsed_milliseconds << " milliseconds" << endl;
 
     return 0;
 }

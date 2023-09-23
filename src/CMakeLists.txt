@@ -2,6 +2,7 @@ add_executable(vhs-deshaker
                main.cpp
                correct_frame.cpp
                process_single_threaded.cpp
+               ConditionalOStream.cpp
                StdoutVideoWriter.cpp)
 
 target_link_libraries(vhs-deshaker ${OpenCV_LIBS})
