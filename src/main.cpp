@@ -37,7 +37,8 @@ int main(int argc, char *argv[]) {
     string input_file = argv[1];
     string output_file = argv[2];
 
-    if (output_file != "stdout") {
+    bool piping_to_stdout = (output_file == "stdout");
+    if (!piping_to_stdout) {
         cout << "vhs-deshaker 1.0.2" << endl << endl;
     }
 
@@ -66,7 +67,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (output_file == "stdout") {
+    if (piping_to_stdout) {
         cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
     }
 
@@ -85,7 +86,7 @@ int main(int argc, char *argv[]) {
         input_file_stream.close();
     }
 
-    if (output_file != "stdout") {
+    if (!piping_to_stdout) {
         cerr << "Processing file " << input_file << " ..." << endl;
     }
     VideoCapture videoCapture(input_file);
@@ -102,12 +103,12 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (output_file != "stdout") {
+        if (!piping_to_stdout) {
             cout << "Using same framerate as in input file: " << fps << endl;
         }
     } else {
         fps = framerate;
-        if (output_file != "stdout") {
+        if (!piping_to_stdout) {
             cout << "Using the user-specified framerate: " << fps << endl;
         }
     }
@@ -116,7 +117,7 @@ int main(int argc, char *argv[]) {
     cv::Size frameSize(videoCapture.get(CAP_PROP_FRAME_WIDTH), videoCapture.get(CAP_PROP_FRAME_HEIGHT));
     bool isColor = true;
     VideoWriter *videoWriter = nullptr;
-    if (output_file == "stdout") {
+    if (piping_to_stdout) {
         videoWriter = new StdoutVideoWriter();
 #ifdef _WIN32
         _setmode(_fileno(stdout), _O_BINARY);
@@ -136,7 +137,7 @@ int main(int argc, char *argv[]) {
     process_single_threaded(videoCapture, *videoWriter, colRange, output_file == "stdout");
     delete videoWriter;
     videoWriter = nullptr;
-    if (output_file == "stdout") {
+    if (piping_to_stdout) {
         fclose(stdout);
     }
 
@@ -145,7 +146,7 @@ int main(int argc, char *argv[]) {
     time_t start_time = chrono::system_clock::to_time_t(start);
     time_t end_time = chrono::system_clock::to_time_t(end);
 
-    if (output_file != "stdout") {
+    if (!piping_to_stdout) {
         cout << "Started at  " << ctime(&start_time);
         cout << "Finished at " << ctime(&end_time);
         cout << "Elapsed time: " << elapsed_milliseconds << " milliseconds" << endl;
