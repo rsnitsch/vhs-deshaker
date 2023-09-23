@@ -138,10 +138,6 @@ int main(int argc, char *argv[]) {
     process_single_threaded(videoCapture, *videoWriter, colRange, !piping_to_stdout);
     delete videoWriter;
     videoWriter = nullptr;
-    if (piping_to_stdout) {
-        // TODO: Reconsider this.
-        fclose(stdout);
-    }
 
     end = chrono::system_clock::now();
     long elapsed_milliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();
