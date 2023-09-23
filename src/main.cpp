@@ -30,6 +30,8 @@ using std::string;
 // TODO: Add --col-range commandline parameter
 // TODO: Replace the positional framerate parameter with --framerate option
 int main(int argc, char *argv[]) {
+    const string VERSION = "1.0.3";
+
 #ifndef _WIN32
     putenv((char *)"OPENCV_FFMPEG_LOGLEVEL=-8");
 #else
@@ -37,7 +39,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     if (argc != 3 && argc != 4) {
-        cerr << "vhs-deshaker 1.0.3" << endl << endl;
+        cerr << "vhs-deshaker " << VERSION << endl << endl;
         cerr << "Usage: vhs-deshaker <input-file> <output-file> [<framerate>]" << endl;
         return 1;
     }
@@ -47,7 +49,7 @@ int main(int argc, char *argv[]) {
 
     bool piping_to_stdout = (output_file == "stdout");
     ConditionalOStream cout(std::cout, !piping_to_stdout);
-    cout << "vhs-deshaker 1.0.3" << endl << endl;
+    cout << "vhs-deshaker " << VERSION << endl << endl;
 
     double framerate = -1;
     if (argc == 4) {
