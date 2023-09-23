@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     start = chrono::system_clock::now();
 
     int colRange = 15;
-    process_single_threaded(videoCapture, *videoWriter, colRange, output_file == "stdout");
+    process_single_threaded(videoCapture, *videoWriter, colRange, !piping_to_stdout);
     delete videoWriter;
     videoWriter = nullptr;
     if (piping_to_stdout) {

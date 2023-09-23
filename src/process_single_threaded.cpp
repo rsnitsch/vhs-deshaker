@@ -12,7 +12,7 @@
 #include <opencv2/imgproc.hpp>
 #endif
 
-void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &videoWriter, const int colRange, bool no_output) {
+void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &videoWriter, const int colRange, bool print_progress) {
     int i = 0;
     int frame_count = videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
     cv::Mat img, corrected, grayBuffer1, grayBuffer2, sobelBuffer1, sobelBuffer2;
@@ -41,7 +41,7 @@ void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &vi
 #endif
 
             videoWriter.write(corrected);
-            if (!no_output && i >= 1000 && i % 1000 == 0) {
+            if (print_progress && i >= 1000 && i % 1000 == 0) {
                 std::cout << "Current frame: " << i << "/" << frame_count << std::endl;
             }
 
