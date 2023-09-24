@@ -30,7 +30,7 @@ using std::string;
 // TODO: Add --col-range commandline parameter
 // TODO: Replace the positional framerate parameter with --framerate option
 int main(int argc, char *argv[]) {
-    const string VERSION = "1.0.3";
+    const string VERSION = "1.1.0";
 
 #ifndef _WIN32
     putenv((char *)"OPENCV_FFMPEG_LOGLEVEL=-8");
