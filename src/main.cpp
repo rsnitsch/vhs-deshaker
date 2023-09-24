@@ -1,26 +1,56 @@
 #include <chrono>
+#include <cstdio>
+#include <cstdlib> // putenv / setenv
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <opencv2/core/utils/logger.hpp>
 #include <opencv2/videoio.hpp>
 #include <string>
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
+
+#include "ConditionalOStream.h"
+#include "StdoutVideoWriter.h"
 #include "process_single_threaded.h"
 
 using namespace cv;
-using namespace std;
+namespace chrono = std::chrono;
+using std::cerr;
+using std::endl;
+using std::ifstream;
+using std::invalid_argument;
+using std::out_of_range;
+using std::stod;
+using std::string;
 
 // TODO: Add --col-range commandline parameter
 // TODO: Replace the positional framerate parameter with --framerate option
 int main(int argc, char *argv[]) {
-    cout << "vhs-deshaker 1.0.3" << endl << endl;
+    const string VERSION = "1.1.0";
+
+#ifndef _WIN32
+    putenv((char *)"OPENCV_FFMPEG_LOGLEVEL=-8");
+#else
+    _putenv("OPENCV_FFMPEG_LOGLEVEL=-8");
+#endif
+
     if (argc != 3 && argc != 4) {
+        cerr << "vhs-deshaker " << VERSION << endl << endl;
         cerr << "Usage: vhs-deshaker <input-file> <output-file> [<framerate>]" << endl;
         return 1;
     }
 
     string input_file = argv[1];
     string output_file = argv[2];
+
+    bool piping_to_stdout = (output_file == "stdout");
+    ConditionalOStream cout(std::cout, !piping_to_stdout);
+    cout << "vhs-deshaker " << VERSION << endl << endl;
+
     double framerate = -1;
     if (argc == 4) {
         try {
@@ -44,6 +74,10 @@ int main(int argc, char *argv[]) {
             cerr << "ERROR: Invalid framerate (number is out of range): " << e.what() << endl;
             return 1;
         }
+    }
+
+    if (piping_to_stdout) {
+        cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
     }
 
     if (input_file == output_file) {
@@ -85,8 +119,16 @@ int main(int argc, char *argv[]) {
     int fourcc = VideoWriter::fourcc('H', 'F', 'Y', 'U');
     cv::Size frameSize(videoCapture.get(CAP_PROP_FRAME_WIDTH), videoCapture.get(CAP_PROP_FRAME_HEIGHT));
     bool isColor = true;
-    VideoWriter videoWriter(output_file, fourcc, fps, frameSize, isColor);
-    if (!videoWriter.isOpened()) {
+    VideoWriter *videoWriter = nullptr;
+    if (piping_to_stdout) {
+        videoWriter = new StdoutVideoWriter();
+#ifdef _WIN32
+        _setmode(_fileno(stdout), _O_BINARY);
+#endif
+    } else {
+        videoWriter = new VideoWriter(output_file, fourcc, fps, frameSize, isColor);
+    }
+    if (!videoWriter->isOpened()) {
         cerr << "Could not create video writer" << endl;
         return 1;
     }
@@ -95,7 +137,9 @@ int main(int argc, char *argv[]) {
     start = chrono::system_clock::now();
 
     int colRange = 15;
-    process_single_threaded(videoCapture, videoWriter, colRange);
+    process_single_threaded(videoCapture, *videoWriter, colRange, !piping_to_stdout);
+    delete videoWriter;
+    videoWriter = nullptr;
 
     end = chrono::system_clock::now();
     long elapsed_milliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();
