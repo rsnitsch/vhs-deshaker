@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1.0
+
+*Release date: 2023/09/24*
+
+* Raw video output to stdout can be enabled by specifying `stdout` as output file. You can use this
+  to pipe the raw video data directly to ffmpeg. Thus, you do not have to keep around an intermediate
+  `.avi` output file anymore that is extremely large due to the lossless HuffYUV codec.
+
 ## v1.0.3
 
 *Release date: 2023/09/21*
