@@ -97,15 +97,15 @@ Example:
 
     vhs-deshaker input.avi stdout | ffmpeg -f rawvideo -c:v rawvideo -s 720x564 -pix_fmt bgr24 -r 50 -i pipe: -pix_fmt yuv420p deshaked.mp4
 
-Advantages:
+Please note you have to:
+
+- specify the correct video resolution in the call to ffmpeg (e.g. `-s 720x564`).
+- specify the framerate in the call to ffmpeg (e.g. `-r 50`).
+
+Advantages of piping to ffmpeg:
 
 - You do not have to keep around an intermediate video file that is extremely large due to the lossless HuffYUV codec.
 - You can deshake and merge the audio stream from the original input file in a single step (not shown in the above example).
-
-Caveats:
-
-- You have to specify the correct video resolution in the call to ffmpeg (e.g. `-s 720x564`).
-- You have to specify the framerate in the call to ffmpeg (e.g. `-r 50`).
 
 ## Build instructions
 
