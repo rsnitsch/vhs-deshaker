@@ -1,4 +1,5 @@
 #pragma once
+#include "ProcessingParameters.h"
 #include <opencv2/videoio.hpp>
 
 /**
@@ -6,7 +7,8 @@
  *
  * @param videoCapture input video frames are read from this object
  * @param videoWriter output video frames are written to this object
- * @param colRange see correct_frame function
+ * @param parameters see ProcessingParameters.h
  * @param print_progress if true, progress is printed for each 1000 frames
  */
-void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &videoWriter, const int colRange, bool print_progress);
+void process_single_threaded(cv::VideoCapture &videoCapture, cv::VideoWriter &videoWriter, const ProcessingParameters &parameters,
+                             bool print_progress);
