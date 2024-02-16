@@ -14,15 +14,12 @@
  * @param parameters See ProcessingParameters.h.
  * @param grayBuffer1 A Mat that can be reused as buffer for the grayscale version of the input frame (left border).
  * @param grayBuffer1 A Mat that can be reused as buffer for the grayscale version of the input frame (right border).
- * @param sobelBuffer1 A Mat that can be reused as buffer for the first Sobel-processed frame region (at left border).
- * @param sobelBuffer2 A Mat that can be reused as buffer for the second Sobel-processed frame region (at right border).
  * @param line_starts_buffer A vector that can be reused as buffer to store line starts.
  * @param line_ends_buffer A vector that can be reused as buffer to store line ends.
  * @param out The corrected output frame (BGR).
  */
 void correct_frame(cv::Mat &input, const ProcessingParameters &parameters, cv::Mat &grayBuffer1, cv::Mat &grayBuffer2,
-                   cv::Mat &sobelBuffer1, cv::Mat &sobelBuffer2, std::vector<int> &line_starts_buffer, std::vector<int> &line_ends_buffer,
-                   cv::Mat &out);
+                   std::vector<int> &line_starts_buffer, std::vector<int> &line_ends_buffer, cv::Mat &out);
 
 /**
  * Draw line starts into an image frame for debugging purposes.

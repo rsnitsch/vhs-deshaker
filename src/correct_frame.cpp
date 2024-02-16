@@ -9,8 +9,7 @@
 using std::vector;
 
 // Internal helper methods.
-void get_raw_line_starts(const cv::Mat &gray, const cv::Mat &sobelX, const ProcessingParameters &parameters, vector<int> &line_starts,
-                         int direction);
+void get_raw_line_starts(const cv::Mat &gray, const ProcessingParameters &parameters, vector<int> &line_starts, int direction);
 void denoise_line_starts(const int minSegmentLength, vector<int> &line_starts, vector<int> &segment_sizes);
 void merge_line_starts_adv(const vector<int> &line_starts1, const vector<int> &line_starts2, vector<int> &segment_sizes1,
                            vector<int> &segment_sizes2, vector<int> &merged, int &merged_from_starts_count, int &merged_from_ends_count);
@@ -23,8 +22,7 @@ const int DIRECTION_LEFT_TO_RIGHT = 1;
 const int DIRECTION_RIGHT_TO_LEFT = -1;
 
 void correct_frame(cv::Mat &input, const ProcessingParameters &parameters, cv::Mat &grayBuffer1, cv::Mat &grayBuffer2,
-                   cv::Mat &sobelBuffer1, cv::Mat &sobelBuffer2, vector<int> &line_starts_buffer, vector<int> &line_ends_buffer,
-                   cv::Mat &out) {
+                   vector<int> &line_starts_buffer, vector<int> &line_ends_buffer, cv::Mat &out) {
     // Check parameters.
     if (parameters.colRange < 1) {
         throw std::invalid_argument("colRange must be >= 1");
@@ -45,17 +43,12 @@ void correct_frame(cv::Mat &input, const ProcessingParameters &parameters, cv::M
     out.create(input.size(), input.type());
 
     cv::cvtColor(input.colRange(0, parameters.colRange), grayBuffer1, cv::COLOR_BGR2GRAY);
-    cv::Sobel(grayBuffer1, sobelBuffer1, CV_32F, 1, 0, 1);
-    assert(sobelBuffer1.cols == parameters.colRange);
-
     cv::cvtColor(input.colRange(input.cols - parameters.colRange, input.cols), grayBuffer2, cv::COLOR_BGR2GRAY);
-    cv::Sobel(grayBuffer2, sobelBuffer2, CV_32F, 1, 0, 1);
-    assert(sobelBuffer2.cols == parameters.colRange);
 
     vector<int> &line_starts = line_starts_buffer;
     vector<int> &line_ends = line_ends_buffer;
-    get_raw_line_starts(grayBuffer1, sobelBuffer1, parameters, line_starts, DIRECTION_LEFT_TO_RIGHT);
-    get_raw_line_starts(grayBuffer2, sobelBuffer2, parameters, line_ends, DIRECTION_RIGHT_TO_LEFT);
+    get_raw_line_starts(grayBuffer1, parameters, line_starts, DIRECTION_LEFT_TO_RIGHT);
+    get_raw_line_starts(grayBuffer2, parameters, line_ends, DIRECTION_RIGHT_TO_LEFT);
 
     auto line_starts_raw = line_starts;
     auto line_ends_raw = line_ends;
@@ -85,14 +78,6 @@ void correct_frame(cv::Mat &input, const ProcessingParameters &parameters, cv::M
 #ifdef ENABLE_VISUALIZATIONS
     bool waitKey = false;
     cv::Vec3b color_for_line_starts(255, 255, 0);
-#endif
-
-#if 0
-    cv::namedWindow("0 - sobelBuffer1 (from left side)");
-    cv::imshow("0 - sobelBuffer1 (from left side)", sobelBuffer1 / 255.0);
-    cv::namedWindow("0 - sobelBuffer2 (from right side)");
-    cv::imshow("0 - sobelBuffer2 (from right side)", sobelBuffer2 / 255.0);
-    waitKey = true;
 #endif
 
     int x_offset = input.cols - 2 * parameters.targetLineStart;
@@ -208,7 +193,7 @@ void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv
 }
 
 /**
- * Scans all rows in sobelX to find the positions where the black border meets the actual video content. sobelX = horizontal image gradient.
+ * Scans all rows in gray to find the positions where the black border meets the actual video content.
  *
  * These positions are referred to as (raw) line_starts. They are used to cleanup horizontal shaking by
  * un-shifting/re-aligning all rows of the frame such that all lines start at the same position.
@@ -218,7 +203,6 @@ void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv
  * and right).
  *
  * @param gray          must be a ROI that contains either the left-hand columns or right-hand columns of a video frame
- * @param sobelX 	    the horizontal image gradient of the gray ROI
  * @param parameters    see ProcessingParameters.h
  * @param direction     indicates whether sobelX is based on the left-hand part of the video (use the constant DIRECTION_LEFT_TO_RIGHT) or
  * 	                    the right-hand part of the video (use constant DIRECTION_RIGHT_TO_LEFT).
@@ -226,37 +210,34 @@ void draw_line_starts(cv::Mat &img, const std::vector<int> line_starts, const cv
  * 	                    start data may be incomplete, i.e. for some rows it may be impossible to determine the start
  *                      position. The respective missing items in line_starts get assigned the special constant MISSING.
  */
-void get_raw_line_starts(const cv::Mat &gray, const cv::Mat &sobelX, const ProcessingParameters &parameters, vector<int> &line_starts,
-                         int direction) {
+void get_raw_line_starts(const cv::Mat &gray, const ProcessingParameters &parameters, vector<int> &line_starts, int direction) {
     assert(direction == DIRECTION_LEFT_TO_RIGHT || direction == DIRECTION_RIGHT_TO_LEFT);
-    line_starts.resize(sobelX.rows, MISSING);
+    line_starts.resize(gray.rows, MISSING);
 
     int x_start, x_step, x_stop;
     if (direction == DIRECTION_LEFT_TO_RIGHT) {
         x_step = 1;
         x_start = 0;
-        x_stop = sobelX.cols;
+        x_stop = gray.cols;
     } else if (direction == DIRECTION_RIGHT_TO_LEFT) {
         x_step = -1;
-        x_start = sobelX.cols - 1;
+        x_start = gray.cols - 1;
         x_stop = -1;
     } else {
         assert(false);
     }
 
-    for (int y = 0; y < sobelX.rows; ++y) {
+    for (int y = 0; y < gray.rows; ++y) {
         line_starts[y] = MISSING;
         for (int x = x_start; x != x_stop; x += x_step) {
             // If there is no pure black at the edge, skip this row. The line start/end
             // cannot be determined.
-            if (x == x_start && gray.at<uint8_t>(y, x) > parameters.pureBlackThreshold) {
+            uint8_t pixel_value = gray.at<uint8_t>(y, x);
+            if (x == x_start && pixel_value > parameters.pureBlackThreshold) {
                 break;
             }
 
-            // double dX = cv::norm(next_pixel - pixel);
-            double dX = abs(sobelX.at<float>(y, x));
-
-            if (dX > 30) {
+            if (pixel_value > parameters.pureBlackThreshold) {
 #if 0
 				input.at<cv::Vec3b>(y, x) = cv::Vec3b(255, 255, 255);
 #endif
@@ -265,7 +246,7 @@ void get_raw_line_starts(const cv::Mat &gray, const cv::Mat &sobelX, const Proce
                 if (direction == DIRECTION_LEFT_TO_RIGHT) {
                     line_starts[y] = x;
                 } else if (direction == DIRECTION_RIGHT_TO_LEFT) {
-                    int reference_point = (sobelX.cols - 2 * parameters.targetLineStart);
+                    int reference_point = (gray.cols - 2 * parameters.targetLineStart);
                     line_starts[y] = x - reference_point;
                 }
 #else
