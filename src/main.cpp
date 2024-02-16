@@ -32,7 +32,7 @@ using std::string;
 // TODO: Add --col-range commandline parameter
 // TODO: Replace the positional framerate parameter with --framerate option
 int main(int argc, char *argv[]) {
-    const string VERSION = "1.1.0";
+    const string VERSION = "2.0.0";
 
     cxxopts::Options options("vhs-deshaker", "vhs-deshaker " + VERSION + "\nFix horizontal shaking in digitized VHS videos\n");
     // clang-format off
