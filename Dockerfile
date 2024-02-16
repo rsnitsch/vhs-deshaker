@@ -12,6 +12,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 COPY CMakeLists.txt ./
+COPY dependencies ./dependencies
 COPY include ./include
 COPY src ./src
 
