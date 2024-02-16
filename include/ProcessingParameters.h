@@ -4,7 +4,7 @@ struct ProcessingParameters {
     static const int DEFAULT_COL_RANGE = -1;
     static const int DEFAULT_TARGET_LINE_START = -1;
     static const int DEFAULT_PURE_BLACK_WIDTH = 8;
-    static const int DEFAULT_PURE_BLACK_THRESHOLD = 50;
+    static const int DEFAULT_PURE_BLACK_THRESHOLD = 20;
     static const int DEFAULT_MIN_LINE_START_SEGMENT_LENGTH = 15;
     static const int DEFAULT_LINE_START_SMOOTHING_KERNEL_SIZE = 51;
 

@@ -83,7 +83,7 @@ The following options are supported:
                                   given by -w (default: -1)
     -w, --pure-black-width arg    Pure black area width (default: 8)
     -p, --pure-black-threshold arg
-                                  Pure black threshold (default: 50)
+                                  Pure black threshold (default: 20)
     -m, --min-line-start-segment-length arg
                                   Min line start segment length (default: 15)
     -k, --line-start-smoothing-kernel-size arg
