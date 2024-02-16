@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.0.0
+
+*Release date: 2024/02/16*
+
+* Added various **commandline options** for fine-tuned processing of difficult videos.
+* Simplified detection of pure black area versus actual video frame content (not based on horizontal
+  image gradient anymore, instead a simple grayscale threshold is used).
+
 ## v1.1.0
 
 *Release date: 2023/09/24*
