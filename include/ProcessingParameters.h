@@ -1,8 +1,9 @@
 #pragma once
 
 struct ProcessingParameters {
-    static const int DEFAULT_COL_RANGE = 15;
-    static const int DEFAULT_TARGET_LINE_START = 8;
+    static const int DEFAULT_COL_RANGE = -1;
+    static const int DEFAULT_TARGET_LINE_START = -1;
+    static const int DEFAULT_PURE_BLACK_WIDTH = 8;
     static const int DEFAULT_PURE_BLACK_THRESHOLD = 50;
     static const int DEFAULT_MIN_LINE_START_SEGMENT_LENGTH = 15;
     static const int DEFAULT_LINE_START_SMOOTHING_KERNEL_SIZE = 51;
@@ -16,8 +17,11 @@ struct ProcessingParameters {
      */
     int colRange = DEFAULT_COL_RANGE;
 
-    // the expected (ideal) width of the left- and right-hand black borders in a decent digitized VHS video.
+    // the target column where the video frame rows should be aligned to.
     int targetLineStart = DEFAULT_TARGET_LINE_START;
+
+    // the (expected/ideal) width of the pure black area in the left- and right-hand borders.
+    int pureBlackWidth = DEFAULT_PURE_BLACK_WIDTH;
 
     // the threshold for the pure black detection, a value between 0-255.
     int pureBlackThreshold = DEFAULT_PURE_BLACK_THRESHOLD;

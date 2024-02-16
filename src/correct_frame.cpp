@@ -246,7 +246,7 @@ void get_raw_line_starts(const cv::Mat &gray, const ProcessingParameters &parame
                 if (direction == DIRECTION_LEFT_TO_RIGHT) {
                     line_starts[y] = x;
                 } else if (direction == DIRECTION_RIGHT_TO_LEFT) {
-                    int reference_point = (gray.cols - 2 * parameters.targetLineStart);
+                    int reference_point = (gray.cols - 2 * parameters.pureBlackWidth);
                     line_starts[y] = x - reference_point;
                 }
 #else

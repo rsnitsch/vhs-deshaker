@@ -73,17 +73,22 @@ In general the command can be executed like this:
     vhs-deshaker -i <input-file> -o <output-file> [OPTION...]
 
 The following options are supported:
-
+  
+    -i, --input arg               Input video
+    -o, --output arg              Output video
     -f, --framerate arg           Enforce this framerate for the output video
-    -c, --colrange arg            Column range (default: 15)
-    -t, --target-line-start arg   Target line start (default: 8)
+    -c, --colrange arg            Column range, -1 = use double the value
+                                  given by -w (default: -1)
+    -t, --target-line-start arg   Target line start, -1 = use same value as
+                                  given by -w (default: -1)
+    -w, --pure-black-width arg    Pure black area width (default: 8)
     -p, --pure-black-threshold arg
-                                    Pure black threshold (default: 50)
+                                  Pure black threshold (default: 50)
     -m, --min-line-start-segment-length arg
-                                    Min line start segment length (default: 15)
+                                  Min line start segment length (default: 15)
     -k, --line-start-smoothing-kernel-size arg
-                                    Line start smoothing kernel size (default:
-                                    51)
+                                  Line start smoothing kernel size (default:
+                                  51)
     -h, --help                    Print usage
 
 ### Handling of audio streams

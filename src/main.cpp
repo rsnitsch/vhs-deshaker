@@ -41,8 +41,9 @@ int main(int argc, char *argv[]) {
         ("i,input", "Input video", cxxopts::value<std::string>())
         ("o,output", "Output video", cxxopts::value<std::string>())
         ("f,framerate", "Enforce this framerate for the output video", cxxopts::value<double>())
-        ("c,colrange", "Column range", cxxopts::value<int>()->default_value(std::to_string(ProcessingParameters::DEFAULT_COL_RANGE)))
-        ("t,target-line-start", "Target line start", cxxopts::value<int>()->default_value(std::to_string(ProcessingParameters::DEFAULT_TARGET_LINE_START)))
+        ("c,colrange", "Column range, -1 = use double the value given by -w", cxxopts::value<int>()->default_value(std::to_string(ProcessingParameters::DEFAULT_COL_RANGE)))
+        ("t,target-line-start", "Target line start, -1 = use same value as given by -w", cxxopts::value<int>()->default_value(std::to_string(ProcessingParameters::DEFAULT_TARGET_LINE_START)))
+        ("w,pure-black-width", "Pure black area width", cxxopts::value<int>()->default_value(std::to_string(ProcessingParameters::DEFAULT_PURE_BLACK_WIDTH)))
         ("p,pure-black-threshold", "Pure black threshold", cxxopts::value<int>()->default_value(std::to_string(ProcessingParameters::DEFAULT_PURE_BLACK_THRESHOLD)))
         ("m,min-line-start-segment-length", "Min line start segment length", cxxopts::value<int>()->default_value(std::to_string(ProcessingParameters::DEFAULT_MIN_LINE_START_SEGMENT_LENGTH)))
         ("k,line-start-smoothing-kernel-size", "Line start smoothing kernel size", cxxopts::value<int>()->default_value(std::to_string(ProcessingParameters::DEFAULT_LINE_START_SMOOTHING_KERNEL_SIZE)))
@@ -93,6 +94,10 @@ int main(int argc, char *argv[]) {
         std::cerr << "ERROR: Target line start can only be specified once" << std::endl;
         return 1;
     }
+    if (result.count("pure-black-width") > 1) {
+        std::cerr << "ERROR: Pure black width can only be specified once" << std::endl;
+        return 1;
+    }
     if (result.count("pure-black-threshold") > 1) {
         std::cerr << "ERROR: Pure black threshold can only be specified once" << std::endl;
         return 1;
@@ -141,9 +146,18 @@ int main(int argc, char *argv[]) {
 
     parameters.colRange = result["colrange"].as<int>();
     parameters.targetLineStart = result["target-line-start"].as<int>();
+    parameters.pureBlackWidth = result["pure-black-width"].as<int>();
     parameters.pureBlackThreshold = result["pure-black-threshold"].as<int>();
     parameters.minLineStartSegmentLength = result["min-line-start-segment-length"].as<int>();
     parameters.lineStartSmoothingKernelSize = result["line-start-smoothing-kernel-size"].as<int>() | 0x1;
+
+    if (parameters.colRange == -1) {
+        parameters.colRange = 2 * parameters.pureBlackWidth;
+    }
+
+    if (parameters.targetLineStart == -1) {
+        parameters.targetLineStart = parameters.pureBlackWidth;
+    }
 
 #ifndef _WIN32
     putenv((char *)"OPENCV_FFMPEG_LOGLEVEL=-8");
@@ -221,6 +235,7 @@ int main(int argc, char *argv[]) {
     }
     cout << "  Column range:                     " << parameters.colRange << endl;
     cout << "  Target line start:                " << parameters.targetLineStart << endl;
+    cout << "  Pure black width:                 " << parameters.pureBlackWidth << endl;
     cout << "  Pure black threshold:             " << parameters.pureBlackThreshold << endl;
     cout << "  Min line start segment length:    " << parameters.minLineStartSegmentLength << endl;
     cout << "  Line start smoothing kernel size: " << parameters.lineStartSmoothingKernelSize << endl;
