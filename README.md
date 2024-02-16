@@ -91,6 +91,14 @@ The following options are supported:
                                   51)
     -h, --help                    Print usage
 
+The most important parameter of all is `-w` / `--pure-black-width`. A wrong `-w` value can _increase_ shaking. To get good results you have to measure the width of
+the pure black borders on the left and right side of your video. If your video is very shaky you will likely have to estimate/guess this width
+and/or just try multiple values until you converge to the best setting.
+
+The parameter `-p` / `--pure-black-threshold` is also fairly important because it is used to determine if a border pixel belongs to the pure black area or to the actual
+content of your video. Measure the brightness/intensity (grayscale value) of your video's border pixels and then add a small "margin of safety" to this number. This
+will be the ideal value for `-p`. The "margin of safety" should be picked a little larger if your video is very noisy.
+
 ### Handling of audio streams
 
 Unfortunately vhs-deshaker can only process video streams. The audio will not be included in the output file. Therefore you have to add back the audio stream manually to the output file. Furthermore, you should know that vhs-shaker uses the lossless HuffYUV video codec to generate the output file. Therefore the output files will be huge and you should make sure your disk has enough free space. Also, the output files must have .avi format / extension because mp4 does not support the HuffYUV codec.
