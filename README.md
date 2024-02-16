@@ -8,6 +8,7 @@ This tool is for fixing a very specific horizontal shaking issue that affects so
 - [How does vhs-deshaker work?](#how-does-vhs-deshaker-work)
 - [Install](#install)
 - [Usage](#usage)
+  - [Handling of audio streams](#handling-of-audio-streams)
   - [Pipe video data to ffmpeg directly](#pipe-video-data-to-ffmpeg-directly)
 - [Build instructions](#build-instructions)
 - [Docker image](#docker-image)
@@ -69,16 +70,43 @@ It is recommended to also install the ffmpeg binaries on your system and edit yo
 
 In general the command can be executed like this:
 
-    vhs-deshaker <input-file> <output-file> [<framerate>]
+    vhs-deshaker -i <input-file> -o <output-file> [OPTION...]
 
-The framerate parameter is optional. If omitted, the framerate will be the same as in the input file.
+The following options are supported:
+  
+    -i, --input arg               Input video
+    -o, --output arg              Output video
+    -f, --framerate arg           Enforce this framerate for the output video
+    -c, --colrange arg            Column range, -1 = use double the value
+                                  given by -w (default: -1)
+    -t, --target-line-start arg   Target line start, -1 = use same value as
+                                  given by -w (default: -1)
+    -w, --pure-black-width arg    Pure black area width (default: 8)
+    -p, --pure-black-threshold arg
+                                  Pure black threshold (default: 20)
+    -m, --min-line-start-segment-length arg
+                                  Min line start segment length (default: 15)
+    -k, --line-start-smoothing-kernel-size arg
+                                  Line start smoothing kernel size (default:
+                                  51)
+    -h, --help                    Print usage
+
+The most important parameter of all is `-w` / `--pure-black-width`. A wrong `-w` value can _increase_ shaking. To get good results you have to measure the width of
+the pure black borders on the left and right side of your video. If your video is very shaky you will likely have to estimate/guess this width
+and/or just try multiple values until you converge to the best setting.
+
+The parameter `-p` / `--pure-black-threshold` is also fairly important because it is used to determine if a border pixel belongs to the pure black area or to the actual
+content of your video. Measure the brightness/intensity (grayscale value) of your video's border pixels and then add a small "margin of safety" to this number. This
+will be the ideal value for `-p`. The "margin of safety" should be picked a little larger if your video is very noisy.
+
+### Handling of audio streams
 
 Unfortunately vhs-deshaker can only process video streams. The audio will not be included in the output file. Therefore you have to add back the audio stream manually to the output file. Furthermore, you should know that vhs-shaker uses the lossless HuffYUV video codec to generate the output file. Therefore the output files will be huge and you should make sure your disk has enough free space. Also, the output files must have .avi format / extension because mp4 does not support the HuffYUV codec.
 
 I recommend to use ffmpeg to add back the audio stream to the deshaked video file. For example:
 
     # Remove horizontal shaking
-    vhs-deshaker.exe input.avi deshaked.avi
+    vhs-deshaker.exe -i input.avi -o deshaked.avi
 
     # Add back the audio stream and recode the video stream from HuffYUV to H.264
     ffmpeg -vn -i input.avi -an -i deshaked.avi -c:a copy -pix_fmt yuv420p final.mp4
@@ -95,17 +123,17 @@ Raw video output to stdout can be enabled by specifying `stdout` as output file.
 
 Example:
 
-    vhs-deshaker input.avi stdout | ffmpeg -f rawvideo -c:v rawvideo -s 720x564 -pix_fmt bgr24 -r 50 -i pipe: -pix_fmt yuv420p deshaked.mp4
+    vhs-deshaker -i input.avi -o stdout | ffmpeg -f rawvideo -c:v rawvideo -s 720x564 -pix_fmt bgr24 -r 50 -i pipe: -pix_fmt yuv420p deshaked.mp4
 
-Advantages:
+Please note you have to:
+
+- specify the correct video resolution in the call to ffmpeg (e.g. `-s 720x564`).
+- specify the framerate in the call to ffmpeg (e.g. `-r 50`).
+
+Advantages of piping to ffmpeg:
 
 - You do not have to keep around an intermediate video file that is extremely large due to the lossless HuffYUV codec.
 - You can deshake and merge the audio stream from the original input file in a single step (not shown in the above example).
-
-Caveats:
-
-- You have to specify the correct video resolution in the call to ffmpeg (e.g. `-s 720x564`).
-- You have to specify the framerate in the call to ffmpeg (e.g. `-r 50`).
 
 ## Build instructions
 
@@ -117,7 +145,7 @@ You can also run vhs-deshaker via docker. I provide a docker image at [`rsnitsch
 
 Example command:
 
-    docker run -it --rm -v "$(pwd):/videos" --user $(id -u):$(id -g) rsnitsch/vhs-deshaker:latest <input-file> <output-file> [<framerate>]
+    docker run -it --rm -v "$(pwd):/videos" --user $(id -u):$(id -g) rsnitsch/vhs-deshaker:latest -i <input-file> -o <output-file> [OPTION...]
 
 ### Docker troubleshooting: Input file cannot be opened
 

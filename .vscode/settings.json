@@ -10,7 +10,8 @@
         "ostream": "cpp",
         "iosfwd": "cpp",
         "chrono": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "memory": "cpp"
     },
     "editor.formatOnSave": true
 }
