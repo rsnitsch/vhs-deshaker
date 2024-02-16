@@ -145,7 +145,7 @@ You can also run vhs-deshaker via docker. I provide a docker image at [`rsnitsch
 
 Example command:
 
-    docker run -it --rm -v "$(pwd):/videos" --user $(id -u):$(id -g) rsnitsch/vhs-deshaker:latest <input-file> <output-file> [<framerate>]
+    docker run -it --rm -v "$(pwd):/videos" --user $(id -u):$(id -g) rsnitsch/vhs-deshaker:latest -i <input-file> -o <output-file> [OPTION...]
 
 ### Docker troubleshooting: Input file cannot be opened
 
